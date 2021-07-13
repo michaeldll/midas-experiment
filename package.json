@@ -1,0 +1,26 @@
+{
+  "name": "hunter-gatherer-template",
+  "version": "1.0.0",
+  "description": "ma template",
+  "main": "./src/index.mjs",
+  "scripts": {
+    "build": "esbuild src/index.mjs --bundle --minify --outfile=built/out.js",
+    "watch": "node watch.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michaeldll/hunter-gatherer-template.git"
+  },
+  "author": "michael.dll",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/michaeldll/hunter-gatherer-template/issues"
+  },
+  "homepage": "https://github.com/michaeldll/hunter-gatherer-template#readme",
+  "dependencies": {
+    "esbuild": "^0.12.15",
+    "esbuild-plugin-sass": "^0.5.2",
+    "ogl": "^0.0.73",
+    "tweakpane": "^3.0.2"
+  }
+}
