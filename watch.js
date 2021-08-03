@@ -3,8 +3,9 @@ const sassPlugin = require('esbuild-plugin-sass')
 
 esbuild.build({
   entryPoints: ['src/index.mjs'],
-  outfile: 'built/out.js',
+  outfile: 'public/out.js',
   bundle: true,
+  sourcemap: true,
   plugins: [sassPlugin()],
   watch: {
     onRebuild(error, result) {
