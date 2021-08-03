@@ -19,11 +19,9 @@
   },
   "homepage": "https://github.com/michaeldll/hunter-gatherer-template#readme",
   "dependencies": {
-    "@ashthornton/asscroll": "^2.0.1",
     "esbuild": "^0.12.15",
     "esbuild-plugin-sass": "^0.5.2",
     "http-server": "^0.12.3",
-    "ogl": "^0.0.73",
     "tweakpane": "^3.0.2"
   }
 }

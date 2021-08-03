@@ -1,12 +1,10 @@
 const esbuild = require('esbuild')
-const sassPlugin = require('esbuild-plugin-sass')
 
 esbuild.build({
   entryPoints: ['src/index.mjs'],
-  outfile: 'public/out.js',
+  outfile: 'public/built/out.js',
   bundle: true,
   sourcemap: true,
-  plugins: [sassPlugin()],
   watch: {
     onRebuild(error, result) {
       if (error) console.error('watch build failed:', error)

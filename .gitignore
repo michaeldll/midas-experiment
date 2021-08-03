@@ -105,3 +105,5 @@ dist
 
 # MacOS garbage
 *.DS_Store
+
+public/built/
