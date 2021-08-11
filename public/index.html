@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
-    <title>Ma template</title>
+    <title>WebGL</title>
     <meta name="description" content="Description here." />
     <style>
         @font-face {
@@ -15,14 +15,32 @@
             font-display: swap;
         }
 
+        canvas {
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+
+        main {
+            position: relative;
+            z-index: 1;
+        }
+
         h1 {
+            color: white;
             font-family: 'Open Sans', sans-serif;
         }
     </style>
 </head>
 
 <body>
-    <h1>Bem vindo</h1>
+    <main>
+        <h1>Hey</h1>
+    </main>
+    <canvas></canvas>
     <script src="built/out.js"></script>
 </body>
 

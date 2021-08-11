@@ -1,7 +1,7 @@
 const esbuild = require('esbuild')
 
 esbuild.build({
-  entryPoints: ['src/index.mjs'],
+  entryPoints: ['src/index.ts'],
   outfile: 'public/built/out.js',
   bundle: true,
   sourcemap: true,
