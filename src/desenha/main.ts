@@ -1,9 +1,10 @@
 import { mat4 } from 'gl-matrix'
 import { glsl, resizeCanvasToDisplaySize, getShaderProgram } from './utils/'
 import Cube from './meshes/cube';
+import Plane from './meshes/plane';
 import { Buffers, Locations, Parameters } from './types';
 import { Mesh } from './abstract/meshes';
-import { Pane, TpChangeEvent } from 'tweakpane';
+import { Pane } from 'tweakpane';
 
 export default function main(pane?: Pane) {
     const canvas = document.querySelector('canvas');
@@ -17,7 +18,7 @@ export default function main(pane?: Pane) {
 
     const program: WebGLProgram = initProgram(gl)
     const locations: Locations = initLocations(gl, program)
-    const meshes: Mesh[] = [new Cube()]
+    const meshes: Mesh[] = [new Plane()]
     const buffers: Buffers = initBuffers(gl, meshes);
 
     const PARAMS: Parameters = { rotation: 0.0 }
@@ -29,7 +30,7 @@ export default function main(pane?: Pane) {
         const deltaTime = now - then;
         then = now;
 
-        drawScene(canvas, gl, program, locations, buffers, PARAMS, deltaTime, pane);
+        drawScene(canvas, gl, program, locations, buffers, meshes, PARAMS, deltaTime, pane);
 
         requestAnimationFrame(render);
     }
@@ -56,7 +57,8 @@ function initProgram(gl) {
         varying lowp vec4 vColor;
 
         void main(void) {
-        gl_FragColor = vColor;
+        // gl_FragColor = vColor;
+            gl_FragColor = vec4(vec3(1.,0.,0.),1.);
         }
     `;
 
@@ -86,55 +88,21 @@ function initBuffers(gl: WebGLRenderingContext, meshes: Mesh[]) {
     for (const mesh of meshes) {
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(mesh.vertices), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, mesh.vertices, gl.STATIC_DRAW);
+        buffers.position.push(positionBuffer)
 
-        // [r, g, b, a]
-        const faceColors = [
-            [1.0, 1.0, 1.0, 1.0],
-            [1.0, 0.0, 0.0, 1.0],
-            [0.0, 1.0, 0.0, 1.0],
-            [0.0, 0.0, 1.0, 1.0],
-            [1.0, 1.0, 0.0, 1.0],
-            [1.0, 0.0, 1.0, 1.0],
-        ];
-
-        // Convert the array of colors into a table for all the vertices.
-        let colors = [];
-
-        for (let i = 0; i < faceColors.length; ++i) {
-            const c = faceColors[i];
-
-            // Repeat each color four times for the four vertices of the face
-            colors = colors.concat(c, c, c, c);
+        if (mesh.colors) {
+            const colorBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, mesh.colors, gl.STATIC_DRAW);
+            buffers.color.push(colorBuffer)
         }
-
-        const colorBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
         // Build the element array buffer; this specifies the indices
         // into the vertex arrays for each face's vertices.
         const indexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-
-        // This array defines each face as two triangles, using the
-        // indices into the vertex array to specify each triangle's
-        // position.
-        const indices = [
-            0, 1, 2, 0, 2, 3,    // front
-            4, 5, 6, 4, 6, 7,    // back
-            8, 9, 10, 8, 10, 11,   // top
-            12, 13, 14, 12, 14, 15,   // bottom
-            16, 17, 18, 16, 18, 19,   // right
-            20, 21, 22, 20, 22, 23,   // left
-        ];
-
-        // Now send the element array to GL
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-            new Uint16Array(indices), gl.STATIC_DRAW);
-
-        buffers.position.push(positionBuffer)
-        buffers.color.push(colorBuffer)
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.indices, gl.STATIC_DRAW);
         buffers.index.push(indexBuffer)
     }
 
@@ -163,7 +131,7 @@ function initTweaks(pane: Pane & any /* broken type ? */, params: Parameters) {
     // )
 }
 
-function drawScene(canvas: HTMLCanvasElement, gl: WebGLRenderingContext, program: WebGLProgram, locations: Locations, buffers: Buffers, PARAMS: Parameters, deltaTime: number, pane?: Pane) {
+function drawScene(canvas: HTMLCanvasElement, gl: WebGLRenderingContext, program: WebGLProgram, locations: Locations, buffers: Buffers, meshes: Mesh[], PARAMS: Parameters, deltaTime: number, pane?: Pane) {
     resizeCanvasToDisplaySize(canvas, window.devicePixelRatio)
 
     // Tell WebGL how to convert from clip space to pixels
@@ -244,24 +212,26 @@ function drawScene(canvas: HTMLCanvasElement, gl: WebGLRenderingContext, program
         gl.enableVertexAttribArray(index);
     }
 
-    // Tell WebGL how to pull out the colors from the color buffer
-    // into the vertexColor attribute.
-    {
-        const index = locations.attributes.vertexColor as number
-        const numComponents = 4;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color[0]);
-        gl.vertexAttribPointer(
-            index,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset);
-        gl.enableVertexAttribArray(index);
+    if (buffers.color.length) {
+        // Tell WebGL how to pull out the colors from the color buffer
+        // into the vertexColor attribute.
+        {
+            const index = locations.attributes.vertexColor as number
+            const numComponents = 4;
+            const type = gl.FLOAT;
+            const normalize = false;
+            const stride = 0;
+            const offset = 0;
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color[0]);
+            gl.vertexAttribPointer(
+                index,
+                numComponents,
+                type,
+                normalize,
+                stride,
+                offset);
+            gl.enableVertexAttribArray(index);
+        }
     }
 
     // Tell WebGL which indices to use to index the vertices
@@ -281,7 +251,7 @@ function drawScene(canvas: HTMLCanvasElement, gl: WebGLRenderingContext, program
 
     // Draw
     {
-        const vertexCount = 36;
+        const vertexCount = meshes[0].vertices.length / (meshes[0].vertices.length / meshes[0].indices.length);
         const type = gl.UNSIGNED_SHORT;
         const offset = 0;
         gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);

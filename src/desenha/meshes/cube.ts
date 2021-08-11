@@ -50,6 +50,28 @@ export default class Cube extends Mesh {
             0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0   // back
         ]);
 
+        // [r, g, b, a]
+        const faceColors = [
+            [1.0, 1.0, 1.0, 1.0],
+            [1.0, 0.0, 0.0, 1.0],
+            [0.0, 1.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0, 1.0],
+            [1.0, 1.0, 0.0, 1.0],
+            [1.0, 0.0, 1.0, 1.0],
+        ];
+
+        // Convert the array of colors into a table for all the vertices.
+        let colors = [];
+
+        for (let i = 0; i < faceColors.length; ++i) {
+            const c = faceColors[i];
+
+            // Repeat each color four times for the four vertices of the face
+            colors = colors.concat(c, c, c, c);
+        }
+
+        this.colors = new Float32Array(colors)
+
         this.indices = new Uint16Array([
             0, 1, 2, 0, 2, 3,  // front
             4, 5, 6, 4, 6, 7,  // right
