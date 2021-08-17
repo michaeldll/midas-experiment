@@ -1,5 +1,39 @@
+import { Mesh } from "../abstract/meshes";
+import { Buffers } from "../types";
+
 // Syntax highlighting
 export const glsl = x => x;
+
+export function initBuffers(gl: WebGLRenderingContext, meshes: Mesh[]) {
+    const buffers: Buffers = {
+        position: [],
+        color: [],
+        index: []
+    }
+
+    for (const mesh of meshes) {
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, mesh.vertices, gl.STATIC_DRAW);
+        buffers.position.push(positionBuffer)
+
+        // Build the element array buffer; this specifies the indices
+        // into the vertex arrays for each face's vertices.
+        const indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.indices, gl.STATIC_DRAW);
+        buffers.index.push(indexBuffer)
+
+        if (mesh.colors) {
+            const colorBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, mesh.colors, gl.STATIC_DRAW);
+            buffers.color.push(colorBuffer)
+        }
+    }
+
+    return buffers
+}
 
 export function getShaderProgram(gl: WebGLRenderingContext, vsSource: string, fsSource: string) {
     const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);

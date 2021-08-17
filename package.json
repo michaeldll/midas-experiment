@@ -4,9 +4,8 @@
   "description": "ma template",
   "main": "./src/index.mjs",
   "scripts": {
-    "build": "esbuild src/index.mjs --bundle --minify --outfile=built/out.js",
-    "watch": "node watch.js",
-    "serve": "http-server"
+    "build": "esbuild src/index.ts --bundle --minify --outfile=built/out.js",
+    "watch": "node watch.js"
   },
   "repository": {
     "type": "git",
@@ -21,9 +20,12 @@
   "dependencies": {
     "canvas-sketch-util": "^1.10.0",
     "esbuild": "^0.12.15",
-    "esbuild-plugin-sass": "^0.5.2",
     "gl-matrix": "^3.3.0",
     "http-server": "^0.12.3",
+    "node-static": "^0.7.11",
     "tweakpane": "^3.0.2"
+  },
+  "devDependencies": {
+    "@types/node-static": "^0.7.7"
   }
 }
