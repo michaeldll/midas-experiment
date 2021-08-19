@@ -1,7 +1,7 @@
 import { resizeCanvasToDisplaySize, getShaderProgram, initBuffers, fetchShaders } from './utils/'
 import Plane from './meshes/plane';
 // import Cube from './meshes/cube';
-import { Buffers, Locations, Parameters } from './types';
+import { Parameters } from './types';
 import { Mesh } from './abstract/mesh';
 import { Pane } from 'tweakpane';
 // import { OBJLoader } from './loaders/OBJLoader';
