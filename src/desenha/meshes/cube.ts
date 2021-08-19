@@ -1,4 +1,4 @@
-import { Mesh } from "../abstract/meshes";
+import { Mesh } from "../abstract/mesh";
 
 export default class Cube extends Mesh {
     constructor() {

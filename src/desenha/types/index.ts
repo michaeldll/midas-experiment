@@ -1,7 +1,8 @@
 export type Buffers = {
-    position: WebGLBuffer[],
-    index: WebGLBuffer[],
-    color?: WebGLBuffer[]
+    positionBuffer: WebGLBuffer,
+    indexBuffer: WebGLBuffer,
+    colorBuffer?: WebGLBuffer,
+    uvBuffer?: WebGLBuffer,
 }
 
 export type Locations = {

@@ -1,38 +1,38 @@
-import { Mesh } from "../abstract/meshes";
-import { Buffers } from "../types";
+import { Mesh } from "../abstract/mesh";
 
-// Syntax highlighting
-export const glsl = x => x;
+export async function fetchShaders(vertexPath: string, fragmentPath: string) {
+    const vertex = await fetch(vertexPath)
+        .then(result => result.text());
+    const fragment = await fetch(fragmentPath)
+        .then(result => result.text());
+    return { vertex, fragment }
+}
 
-export function initBuffers(gl: WebGLRenderingContext, meshes: Mesh[]) {
-    const buffers: Buffers = {
-        position: [],
-        color: [],
-        index: []
+export function initBuffers(gl: WebGLRenderingContext, mesh: Mesh) {
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, mesh.vertices, gl.STATIC_DRAW);
+
+    // Build the element array buffer; this specifies the indices
+    // into the vertex arrays for each face's vertices.
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.indices, gl.STATIC_DRAW);
+
+    // const colorBuffer = gl.createBuffer();
+    // gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    // gl.bufferData(gl.ARRAY_BUFFER, mesh.colors, gl.STATIC_DRAW);
+
+    const uvBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, mesh.uv, gl.STATIC_DRAW);
+
+    return {
+        positionBuffer,
+        indexBuffer,
+        // colorBuffer,
+        uvBuffer
     }
-
-    for (const mesh of meshes) {
-        const positionBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, mesh.vertices, gl.STATIC_DRAW);
-        buffers.position.push(positionBuffer)
-
-        // Build the element array buffer; this specifies the indices
-        // into the vertex arrays for each face's vertices.
-        const indexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.indices, gl.STATIC_DRAW);
-        buffers.index.push(indexBuffer)
-
-        if (mesh.colors) {
-            const colorBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, mesh.colors, gl.STATIC_DRAW);
-            buffers.color.push(colorBuffer)
-        }
-    }
-
-    return buffers
 }
 
 export function getShaderProgram(gl: WebGLRenderingContext, vsSource: string, fsSource: string) {
