@@ -1,4 +1,6 @@
-# hunter-gatherer-template
+# hunter-gatherer template
+
+As barebones as I can go. You probably don't want to use this.
 
 ## How to develop :
 ```
@@ -8,16 +10,10 @@ then
 ```
 npm run watch
 ``` 
-in one CLI
 
-and
+This will serve `public/index.html` using built `built/out.js` from `/src/index.ts`
 
-```
-npm run serve
-``` 
-in another CLI.
-
-This will serve `public/index.html` using built `built/out.js` and `built/out.css` files from `/src/index.mjs`
+Textures, shaders, and all other assets are fetched from the `public` folder.
 
 ## How to deploy
 
