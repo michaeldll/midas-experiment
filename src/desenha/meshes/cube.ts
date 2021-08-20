@@ -78,7 +78,7 @@ export default class Cube extends Mesh {
                 12, 13, 14, 12, 14, 15, // left
                 16, 17, 18, 16, 18, 19, // down
                 20, 21, 22, 20, 22, 23  // back
-            ])
+            ]),
         }
     }
 }

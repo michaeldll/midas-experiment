@@ -4,9 +4,9 @@ import Cube from './meshes/cube';
 import { Parameters } from './types';
 import { Mesh } from './abstract/mesh';
 import { Pane } from 'tweakpane';
-import { OBJLoader } from './loaders/OBJLoader';
+// import { OBJLoader } from './loaders/OBJLoader';
 
-export default function main(pane?: Pane) {
+export default function main(pane?: Pane & any) {
     const canvas = document.querySelector('canvas');
     const gl = canvas.getContext('webgl', { powerPreference: "high-performance" });
 
@@ -15,7 +15,7 @@ export default function main(pane?: Pane) {
         return;
     }
 
-    const meshes: Mesh[] = [new Plane()]
+    const meshes: Mesh[] = [new Cube()]
 
     fetchShaders('./assets/shaders/texel/vertex.glsl', './assets/shaders/texel/fragment.glsl').then(({ vertex, fragment }) => {
         for (const mesh of meshes) {
@@ -25,14 +25,39 @@ export default function main(pane?: Pane) {
             mesh.setBuffers(gl)
         }
 
-        const loader = new OBJLoader()
-        const content = loader.load('assets/models/cuboid.obj')
-        content.then((value) => {
-            console.log(loader.parse(value))
-        })
+        const planeParams: Parameters = {
+            translation: { x: 0, y: 0, z: -2 },
+            rotation: { x: 0, y: 0, z: 0 },
+            scale: { x: 1, y: 1, z: 1 }
+        }
+        if (pane) {
+            pane.addInput(planeParams, 'translation')
+            pane.addInput(planeParams, 'rotation')
+            pane.addInput(planeParams, 'scale')
+        }
+        meshes[0].position = planeParams.translation
+        meshes[0].rotation = planeParams.rotation
+        meshes[0].scale = planeParams.scale
 
-        const PARAMS: Parameters = { rotation: 0.0 }
-        if (pane) tweaks(pane, PARAMS)
+        // const cubeParams: Parameters = {
+        //     translation: { x: 0, y: 0, z: -2 },
+        //     rotation: { x: 0, y: 0, z: 0 },
+        //     scale: { x: 1, y: 1, z: 1 }
+        // }
+        // if (pane) {
+        //     pane.addInput(cubeParams, 'translation')
+        //     pane.addInput(cubeParams, 'rotation')
+        //     pane.addInput(cubeParams, 'scale')
+        // }
+        // meshes[1].position = cubeParams.translation
+        // meshes[1].rotation = cubeParams.rotation
+        // meshes[1].scale = cubeParams.scale
+
+        // const loader = new OBJLoader()
+        // const content = loader.load('assets/models/cuboid.obj')
+        // content.then((value) => {
+        //     console.log(loader.parse(value))
+        // })
 
         let then = 0;
         function render(now: number) {
@@ -40,7 +65,7 @@ export default function main(pane?: Pane) {
             const deltaTime = now - then;
             then = now;
 
-            drawScene(canvas, gl, meshes, PARAMS, deltaTime, pane);
+            drawScene(canvas, gl, meshes, deltaTime, pane);
 
             if (pane) pane.refresh()
 
@@ -50,29 +75,7 @@ export default function main(pane?: Pane) {
     })
 }
 
-function tweaks(pane: Pane & any /* broken type ? */, params: Parameters) {
-    const inputs = []
-
-    inputs.push(pane.addInput(params, 'rotation'))
-
-    // inputs.push(
-    //     pane.addInput(params, 'translation', {
-    //         x: { min: 0, max: window.innerWidth },
-    //         y: { min: 0, max: window.innerHeight },
-    //         z: { min: -1, max: 1 }
-    //     })
-    // )
-
-    // inputs.push(
-    //     pane.addInput(params, 'rotation', {
-    //         x: { min: -2 * Math.PI, max: 2 * Math.PI },
-    //         y: { min: -2 * Math.PI, max: 2 * Math.PI },
-    //         z: { min: -2 * Math.PI, max: 2 * Math.PI }
-    //     })
-    // )
-}
-
-function drawScene(canvas: HTMLCanvasElement, gl: WebGLRenderingContext, meshes: Mesh[], PARAMS: Parameters, deltaTime: number, pane?: Pane) {
+function drawScene(canvas: HTMLCanvasElement, gl: WebGLRenderingContext, meshes: Mesh[], deltaTime: number, pane?: Pane) {
     resizeCanvasToDisplaySize(canvas, window.devicePixelRatio)
 
     // Tell WebGL how to convert from clip space to pixels
@@ -88,19 +91,20 @@ function drawScene(canvas: HTMLCanvasElement, gl: WebGLRenderingContext, meshes:
     for (const mesh of meshes) {
         gl.useProgram(mesh.program);
 
-        mesh.calcMatrixes(gl, PARAMS.rotation)
+        mesh.calcMatrixes(gl)
 
         mesh.getAttributesFromBuffers(gl)
 
         // Draw
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.buffers.indices);
         {
             const vertexCount = mesh.geometry.vertices.length / (mesh.geometry.vertices.length / mesh.geometry.indices.length);
             const type = gl.UNSIGNED_SHORT;
             const offset = 0;
-            gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+            gl.drawElements(gl.LINE_STRIP, vertexCount, type, offset);
         }
-    }
 
-    //PARAMS.rotation += deltaTime;
+        mesh.rotation.x += deltaTime;
+    }
 }
 

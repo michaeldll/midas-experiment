@@ -7,7 +7,7 @@ const static = require('node-static');
 //
 const file = new static.Server('./public');
 const hostname = '127.0.0.1';
-const port = 1234;
+const port = 4321;
 
 const getNewServer = () => http.createServer(function (request, response) {
   request.addListener('end', () => {
@@ -38,7 +38,7 @@ esbuild.build({
       if (error) console.error('watch build failed:', error)
       else {
         console.log('watch build succeeded:', result)
-        // restartServer()
+        restartServer()
       }
     },
   },

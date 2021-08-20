@@ -7,6 +7,9 @@ export abstract class Mesh {
     geometry: Geometry
     program: WebGLProgram
     locations: Locations
+    position: { x: number, y: number, z: number }
+    rotation: { x: number, y: number, z: number }
+    scale: { x: number, y: number, z: number }
 
     constructor(name?: string) {
         if (name) this.name = name
@@ -58,7 +61,7 @@ export abstract class Mesh {
         }
     }
 
-    calcMatrixes = (gl: WebGLRenderingContext, rotation: number) => {
+    calcMatrixes = (gl: WebGLRenderingContext) => {
         // Projection
         const projectionMatrix = mat4.create();
 
@@ -94,18 +97,24 @@ export abstract class Mesh {
 
         const modelMatrix = mat4.create();
 
-        mat4.scale(modelMatrix, modelMatrix, [1, 1, 1])
+        mat4.scale(modelMatrix,
+            modelMatrix,
+            [this.scale.x, this.scale.y, this.scale.z])
         mat4.translate(modelMatrix,
             modelMatrix,
-            [-0.0, 0.0, -15.0]);
+            [this.position.x, this.position.y, this.position.z]);
         mat4.rotate(modelMatrix,
             modelMatrix,
-            rotation,     // amount to rotate in radians
-            [0, 0, 1]);       // axis to rotate around (Z)
+            this.rotation.x,     // amount to rotate in radians
+            [1, 0, 0]);       // axis to rotate around (X)
         mat4.rotate(modelMatrix,  // destination matrix
             modelMatrix,
-            rotation * .7,// amount to rotate in radians
+            this.rotation.y,// amount to rotate in radians
             [0, 1, 0]);       // axis to rotate around (X)
+        mat4.rotate(modelMatrix,
+            modelMatrix,
+            this.rotation.z,     // amount to rotate in radians
+            [0, 0, 1]);       // axis to rotate around (Z)
 
         // Set shader uniforms
         gl.uniformMatrix4fv(
@@ -121,7 +130,8 @@ export abstract class Mesh {
     getAttributesFromBuffers = (gl: WebGLRenderingContext) => {
         const { vertices, indices, colors, uvs } = this.buffers
 
-        if (vertices) {
+        if (vertices && this.locations.attributes.position > -1) {
+
             // Pull out the positions from the position
             // buffer into the vertexPosition attribute
             {
@@ -145,7 +155,7 @@ export abstract class Mesh {
             }
         }
 
-        if (uvs) {
+        if (uvs && this.locations.attributes.uv > -1) {
             // Pull out the texture coordinates from the uv buffer
             // into the uv attribute.
             {
@@ -164,7 +174,7 @@ export abstract class Mesh {
             }
         }
 
-        if (colors) {
+        if (colors && this.locations.attributes.color > -1) {
             // Pull out the colors from the color buffer
             // into the vertexColor attribute.
             {
