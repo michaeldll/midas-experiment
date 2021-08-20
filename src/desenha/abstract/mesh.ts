@@ -1,18 +1,20 @@
 import { mat4 } from 'gl-matrix'
-import { Locations, Buffers } from "../types"
+import { Locations, Buffers, Geometry } from "../types"
 
 export abstract class Mesh {
+    name: string
     buffers: Buffers
-    vertices: Float32Array
-    normals: Float32Array
-    indices: Uint16Array
+    geometry: Geometry
     program: WebGLProgram
     locations: Locations
-    colors?: Float32Array
-    uv?: Float32Array
-    uvFloatSize?: number
 
-    getLocations = (gl: WebGLRenderingContext) => {
+    constructor(name?: string) {
+        if (name) this.name = name
+        this.buffers = {}
+    }
+
+    setLocations = (gl: WebGLRenderingContext) => {
+        // If location not found, value is -1
         this.locations = {
             attributes: {
                 position: gl.getAttribLocation(this.program, 'aPosition'),
@@ -117,63 +119,108 @@ export abstract class Mesh {
     }
 
     getAttributesFromBuffers = (gl: WebGLRenderingContext) => {
-        // Pull out the positions from the position
-        // buffer into the vertexPosition attribute
-        {
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.positionBuffer);
+        const { vertices, indices, colors, uvs } = this.buffers
 
-            const index = this.locations.attributes.position as number
-            const numComponents = 3;
-            const type = gl.FLOAT;
-            const normalize = false;
-            const stride = 0;
-            const offset = 0;
-            gl.vertexAttribPointer(
-                index,
-                numComponents,
-                type,
-                normalize,
-                stride,
-                offset);
+        if (vertices) {
+            // Pull out the positions from the position
+            // buffer into the vertexPosition attribute
+            {
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.vertices);
 
-            gl.enableVertexAttribArray(index);
+                const index = this.locations.attributes.position as number
+                const numComponents = 3;
+                const type = gl.FLOAT;
+                const normalize = false;
+                const stride = 0;
+                const offset = 0;
+                gl.vertexAttribPointer(
+                    index,
+                    numComponents,
+                    type,
+                    normalize,
+                    stride,
+                    offset);
+
+                gl.enableVertexAttribArray(index);
+            }
         }
 
-        // Pull out the colors from the color buffer
-        // into the vertexColor attribute.
-        // {
-        //     const index = locations.attributes.color as number
-        //     const numComponents = 4;
-        //     const type = gl.FLOAT;
-        //     const normalize = false;
-        //     const stride = 0;
-        //     const offset = 0;
-        //     gl.bindBuffer(gl.ARRAY_BUFFER, bufferData.colorBuffer);
-        //     gl.vertexAttribPointer(
-        //         index,
-        //         numComponents,
-        //         type,
-        //         normalize,
-        //         stride,
-        //         offset);
-        //     gl.enableVertexAttribArray(index);
-        // }
+        if (uvs) {
+            // Pull out the texture coordinates from the uv buffer
+            // into the uv attribute.
+            {
 
-        // Pull out the texture coordinates from the uv buffer
-        // into the uv attribute.
-        {
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.uvs);
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.uvBuffer);
+                const index = this.locations.attributes.uv as number
+                const size = 2;          // 2 components per iteration
+                const type = gl.FLOAT;   // the data is 32bit floats
+                const normalize = false; // don't normalize the data
+                const stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+                const offset = 0;        // start at the beginning of the buffer
 
-            const index = this.locations.attributes.uv as number
-            const size = 2;          // 2 components per iteration
-            const type = gl.FLOAT;   // the data is 32bit floats
-            const normalize = false; // don't normalize the data
-            const stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-            const offset = 0;        // start at the beginning of the buffer
-
-            gl.enableVertexAttribArray(index);
-            gl.vertexAttribPointer(index, size, type, normalize, stride, offset);
+                gl.enableVertexAttribArray(index);
+                gl.vertexAttribPointer(index, size, type, normalize, stride, offset);
+            }
         }
+
+        if (colors) {
+            // Pull out the colors from the color buffer
+            // into the vertexColor attribute.
+            {
+                const index = this.locations.attributes.color as number
+                const numComponents = 4;
+                const type = gl.FLOAT;
+                const normalize = false;
+                const stride = 0;
+                const offset = 0;
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.colors);
+                gl.vertexAttribPointer(
+                    index,
+                    numComponents,
+                    type,
+                    normalize,
+                    stride,
+                    offset);
+                gl.enableVertexAttribArray(index);
+            }
+        }
+
+        if (indices) {
+            // Tell WebGL which indices to use to index the vertices
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.indices);
+        }
+    }
+
+    setBuffers = (gl: WebGLRenderingContext) => {
+        const { vertices, indices, colors, uvs } = this.geometry
+
+        if (vertices) {
+            this.setBuffer(gl, 'vertices')
+        }
+
+        if (indices) {
+            // Build the element array buffer; this specifies the indices
+            // into the vertex arrays for each face's vertices.
+            const indexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+            this.buffers.indices = indexBuffer
+        }
+
+        if (colors) {
+            this.setBuffer(gl, 'colors')
+        }
+
+        if (uvs) {
+            this.setBuffer(gl, 'uvs')
+        }
+    }
+
+    setBuffer = (gl: WebGLRenderingContext, nameProp: string) => {
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this.geometry[nameProp], gl.STATIC_DRAW);
+        this.buffers[nameProp] = buffer
     }
 }

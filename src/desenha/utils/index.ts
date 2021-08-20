@@ -8,33 +8,6 @@ export async function fetchShaders(vertexPath: string, fragmentPath: string) {
     return { vertex, fragment }
 }
 
-export function initBuffers(gl: WebGLRenderingContext, mesh: Mesh) {
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, mesh.vertices, gl.STATIC_DRAW);
-
-    // Build the element array buffer; this specifies the indices
-    // into the vertex arrays for each face's vertices.
-    const indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.indices, gl.STATIC_DRAW);
-
-    // const colorBuffer = gl.createBuffer();
-    // gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    // gl.bufferData(gl.ARRAY_BUFFER, mesh.colors, gl.STATIC_DRAW);
-
-    const uvBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, mesh.uv, gl.STATIC_DRAW);
-
-    return {
-        positionBuffer,
-        indexBuffer,
-        // colorBuffer,
-        uvBuffer
-    }
-}
-
 export function getShaderProgram(gl: WebGLRenderingContext, vsSource: string, fsSource: string) {
     const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
     const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
@@ -85,7 +58,7 @@ export function loadShader(gl: WebGLRenderingContext, type: number, source: stri
  * @return {boolean} true if the canvas was resized.
  * @memberOf module:webgl-utils
  */
-export function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement, multiplier = 1) {
+export function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement, multiplier: number = 1): boolean {
     multiplier = multiplier || 1;
     const width = canvas.clientWidth * multiplier | 0;
     const height = canvas.clientHeight * multiplier | 0;

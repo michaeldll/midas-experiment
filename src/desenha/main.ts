@@ -1,10 +1,10 @@
-import { resizeCanvasToDisplaySize, getShaderProgram, initBuffers, fetchShaders } from './utils/'
+import { resizeCanvasToDisplaySize, getShaderProgram, fetchShaders } from './utils/'
 import Plane from './meshes/plane';
-// import Cube from './meshes/cube';
+import Cube from './meshes/cube';
 import { Parameters } from './types';
 import { Mesh } from './abstract/mesh';
 import { Pane } from 'tweakpane';
-// import { OBJLoader } from './loaders/OBJLoader';
+import { OBJLoader } from './loaders/OBJLoader';
 
 export default function main(pane?: Pane) {
     const canvas = document.querySelector('canvas');
@@ -15,21 +15,21 @@ export default function main(pane?: Pane) {
         return;
     }
 
-    const meshes: Mesh[] = [new Plane(),]
+    const meshes: Mesh[] = [new Plane()]
 
     fetchShaders('./assets/shaders/texel/vertex.glsl', './assets/shaders/texel/fragment.glsl').then(({ vertex, fragment }) => {
         for (const mesh of meshes) {
             mesh.program = getShaderProgram(gl, vertex, fragment)
-            mesh.getLocations(gl)
+            mesh.setLocations(gl)
             mesh.loadTexture(gl, './assets/textures/cade.jpg')
-            mesh.buffers = initBuffers(gl, mesh)
+            mesh.setBuffers(gl)
         }
 
-        // const loader = new OBJLoader()
-        // const content = loader.load('assets/models/cuboid.obj')
-        // content.then((value) => {
-        //     console.log(loader.parse(value))
-        // })
+        const loader = new OBJLoader()
+        const content = loader.load('assets/models/cuboid.obj')
+        content.then((value) => {
+            console.log(loader.parse(value))
+        })
 
         const PARAMS: Parameters = { rotation: 0.0 }
         if (pane) tweaks(pane, PARAMS)
@@ -94,10 +94,7 @@ function drawScene(canvas: HTMLCanvasElement, gl: WebGLRenderingContext, meshes:
 
         // Draw
         {
-            // Tell WebGL which indices to use to index the vertices
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.buffers.indexBuffer);
-
-            const vertexCount = mesh.vertices.length / (mesh.vertices.length / mesh.indices.length);
+            const vertexCount = mesh.geometry.vertices.length / (mesh.geometry.vertices.length / mesh.geometry.indices.length);
             const type = gl.UNSIGNED_SHORT;
             const offset = 0;
             gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
