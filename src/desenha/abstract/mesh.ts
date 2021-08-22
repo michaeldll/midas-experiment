@@ -1,8 +1,9 @@
 import { mat4 } from 'gl-matrix'
-import { Locations, Buffers, Geometry } from "../types"
+import { Locations, Buffers, Geometry, MeshConstructor } from "../types"
 
 export abstract class Mesh {
     name: string
+    readyToRender: boolean
     buffers: Buffers
     geometry: Geometry
     program: WebGLProgram
@@ -11,89 +12,81 @@ export abstract class Mesh {
     rotation: { x: number, y: number, z: number }
     scale: { x: number, y: number, z: number }
 
-    constructor(name?: string) {
+    constructor({ program, name }: MeshConstructor) {
+        this.program = program
         if (name) this.name = name
         this.buffers = {}
-    }
-
-    setLocations = (gl: WebGLRenderingContext) => {
-        // If location not found, value is -1
-        this.locations = {
-            attributes: {
-                position: gl.getAttribLocation(this.program, 'aPosition'),
-                color: gl.getAttribLocation(this.program, 'aVertexColor'),
-                uv: gl.getAttribLocation(this.program, 'aUv')
-            },
-            uniforms: {
-                projectionMatrix: gl.getUniformLocation(this.program, 'uProjectionMatrix'),
-                modelViewMatrix: gl.getUniformLocation(this.program, 'uModelViewMatrix'),
-                texture: gl.getUniformLocation(this.program, 'uTexture')
-            }
-        }
+        this.readyToRender = true
     }
 
     // Set a 2D texture
-    loadTexture = (gl: WebGLRenderingContext, path: string) => {
-        const texture = gl.createTexture();
-        const image = new Image();
-        image.src = path;
-        image.onload = () => {
-            // Flip the image's y axis
-            // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+    loadTexture = (gl: WebGLRenderingContext, path: string) =>
+        new Promise((resolve: (value: void) => void) => {
+            const texture = gl.createTexture();
+            const image = new Image();
+            image.src = path;
+            image.onload = () => {
+                // Flip the image's y axis
+                // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
 
-            // Enable texture 0
-            gl.activeTexture(gl.TEXTURE0);
+                // Enable texture 0
+                gl.activeTexture(gl.TEXTURE0);
 
-            // Set the texture's target (2D or cubemap)
-            gl.bindTexture(gl.TEXTURE_2D, texture);
+                // Set the texture's target (2D or cubemap)
+                gl.bindTexture(gl.TEXTURE_2D, texture);
 
-            // Stretch/wrap options
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                // Stretch/wrap options
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
-            // Bind image to texture
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+                // Bind image to texture
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
 
-            // Mipmaps
-            gl.generateMipmap(gl.TEXTURE_2D);
+                // Mipmaps
+                gl.generateMipmap(gl.TEXTURE_2D);
 
-            // Pass texture 0 to the sampler
-            gl.uniform1i(this.locations.uniforms.texture, 0);
-        }
-    }
+                // Pass texture 0 to the sampler
+                gl.useProgram(this.program);
+                gl.uniform1i(this.locations.uniforms.texture, 0);
+                resolve()
+            }
+        })
+
+
 
     calcMatrixes = (gl: WebGLRenderingContext) => {
         // Projection
         const projectionMatrix = mat4.create();
 
         // Perspective
-        // {
-        //     const fieldOfView = 45 * Math.PI / 180;   // in radians
-        //     const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-        //     const zNear = 0.1;
-        //     const zFar = 100.0;
-
-        //     mat4.perspective(
-        //         projectionMatrix,
-        //         fieldOfView,
-        //         aspect,
-        //         zNear,
-        //         zFar
-        //     );
-        // }
-
-        // Orthographic
         {
             const glCanvas = gl.canvas as HTMLCanvasElement
+            const fieldOfView = 45 * Math.PI / 180;   // in radians
             const aspect = glCanvas.clientWidth / glCanvas.clientHeight;
-            const left = -5 * aspect;
-            const right = 5 * aspect;
-            const bottom = 5;
-            const top = -5;
-            const near = 0.1;
-            const far = 100;
+            const zNear = 0.1;
+            const zFar = 100.0;
 
-            mat4.ortho(projectionMatrix, left, right, bottom, top, near, far)
+            mat4.perspective(
+                projectionMatrix,
+                fieldOfView,
+                aspect,
+                zNear,
+                zFar
+            );
         }
+
+        // Orthographic
+        // {
+        //     const glCanvas = gl.canvas as HTMLCanvasElement
+        //     const aspect = glCanvas.clientWidth / glCanvas.clientHeight;
+        //     const left = -5 * aspect;
+        //     const right = 5 * aspect;
+        //     const bottom = 5;
+        //     const top = -5;
+        //     const near = 0.1;
+        //     const far = 100;
+
+        //     mat4.ortho(projectionMatrix, left, right, bottom, top, near, far)
+        // }
 
         const modelMatrix = mat4.create();
 
@@ -117,6 +110,7 @@ export abstract class Mesh {
             [0, 0, 1]);       // axis to rotate around (Z)
 
         // Set shader uniforms
+        gl.useProgram(this.program);
         gl.uniformMatrix4fv(
             this.locations.uniforms.projectionMatrix,
             false,
@@ -130,6 +124,7 @@ export abstract class Mesh {
     getAttributesFromBuffers = (gl: WebGLRenderingContext) => {
         const { vertices, indices, colors, uvs } = this.buffers
 
+        gl.useProgram(this.program);
         if (vertices && this.locations.attributes.position > -1) {
 
             // Pull out the positions from the position

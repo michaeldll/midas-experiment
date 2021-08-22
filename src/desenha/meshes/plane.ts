@@ -1,8 +1,9 @@
 import { Mesh } from "../abstract/mesh";
+import { MeshConstructor } from "../types";
 
 export default class Plane extends Mesh {
-    constructor() {
-        super()
+    constructor({ program, name }: MeshConstructor) {
+        super({ program, name })
 
         this.geometry = {
             vertices: new Float32Array([

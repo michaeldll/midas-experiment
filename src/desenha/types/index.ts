@@ -22,3 +22,8 @@ export type Geometry = {
     colors?: Float32Array
     uvs?: Float32Array
 }
+
+export type MeshConstructor = {
+    program: WebGLProgram,
+    name?: string
+}
