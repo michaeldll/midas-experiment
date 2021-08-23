@@ -2,8 +2,8 @@ import { Mesh } from "../abstract/mesh";
 import { MeshConstructor } from "../types";
 
 export default class Cube extends Mesh {
-    constructor({ program, name }: MeshConstructor) {
-        super({ program, name })
+    constructor({ program, locationNames, gl, parameters, name }: MeshConstructor) {
+        super({ program, locationNames, gl, parameters, name })
 
         // [r, g, b, a]
         const faceColors = [
@@ -26,7 +26,7 @@ export default class Cube extends Mesh {
         }
 
         this.geometry = {
-            vertices: new Float32Array([
+            positions: new Float32Array([
                 // Front face
                 -1.0, -1.0, 1.0,
                 1.0, -1.0, 1.0,
@@ -81,5 +81,7 @@ export default class Cube extends Mesh {
                 20, 21, 22, 20, 22, 23  // back
             ]),
         }
+
+        this.setBuffers(gl)
     }
 }

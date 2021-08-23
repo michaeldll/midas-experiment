@@ -38,7 +38,7 @@ esbuild.build({
       if (error) console.error('watch build failed:', error)
       else {
         console.log('watch build succeeded:', result)
-        console.log('last build: ', new Date().getMinutes(), 'm', new Date().getSeconds(), 's', new Date().getMilliseconds(), 'ms')
+        console.log('last build: ', new Date().getHours(), 'h', new Date().getMinutes(), 'm', new Date().getSeconds(), 's', new Date().getMilliseconds(), 'ms')
         // restartServer()
       }
     },

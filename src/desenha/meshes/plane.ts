@@ -2,11 +2,11 @@ import { Mesh } from "../abstract/mesh";
 import { MeshConstructor } from "../types";
 
 export default class Plane extends Mesh {
-    constructor({ program, name }: MeshConstructor) {
-        super({ program, name })
+    constructor({ program, locationNames, gl, parameters, name }: MeshConstructor) {
+        super({ program, locationNames, gl, parameters, name })
 
         this.geometry = {
-            vertices: new Float32Array([
+            positions: new Float32Array([
                 -1.0, -1.0, 0.0,
                 1.0, -1.0, 0.0,
                 1.0, 1.0, 0.0,
@@ -28,5 +28,7 @@ export default class Plane extends Mesh {
                 0.0, 1.0,
             ])
         }
+
+        this.setBuffers(gl)
     }
 }

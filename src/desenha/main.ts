@@ -1,10 +1,11 @@
 import { resizeCanvasToDisplaySize, getShaderProgram, fetchShaders } from './utils/'
 import Plane from './meshes/plane';
 import Cube from './meshes/cube';
-import { Parameters } from './types';
 import { Mesh } from './abstract/mesh';
 import { Pane } from 'tweakpane';
-// import { OBJLoader } from './loaders/OBJLoader';
+import { OBJLoader } from './loaders/OBJLoader';
+import Generic from './meshes/generic';
+import { Geometry } from './types';
 
 export default function main(pane?: Pane & any) {
     const canvas = document.querySelector('canvas');
@@ -30,72 +31,75 @@ export default function main(pane?: Pane & any) {
             const [texelShaders, basicShaders] = shaders
 
             // Textured Plane
-            const plane = new Plane({
-                program: getShaderProgram(gl, texelShaders.vertex, texelShaders.fragment),
-            })
-            plane.locations = {
-                attributes: {
-                    position: gl.getAttribLocation(plane.program, 'aPosition'),
-                    uv: gl.getAttribLocation(plane.program, 'aUv')
-                },
-                uniforms: {
-                    projectionMatrix: gl.getUniformLocation(plane.program, 'uProjectionMatrix'),
-                    modelViewMatrix: gl.getUniformLocation(plane.program, 'uModelViewMatrix'),
-                    texture: gl.getUniformLocation(plane.program, 'uTexture')
-                }
-            }
-            plane.readyToRender = false
-            plane.loadTexture(gl, './assets/textures/cade.jpg').then(() => {
-                plane.setBuffers(gl)
-                plane.readyToRender = true
-            })
-            const planeParams: Parameters = {
+            const planeParams = {
                 translation: { x: 2, y: 0, z: -10 },
                 rotation: { x: 0, y: 0, z: 0 },
                 scale: { x: 1, y: 1, z: 1 }
             }
-            plane.position = planeParams.translation
-            plane.rotation = planeParams.rotation
-            plane.scale = planeParams.scale
+            const plane = new Plane({
+                program: getShaderProgram(gl, texelShaders.vertex, texelShaders.fragment),
+                locationNames: {
+                    attributes: ['aPosition', 'aUv'],
+                    uniforms: ['uProjectionMatrix', 'uModelViewMatrix', 'uTexture']
+                },
+                parameters: planeParams,
+                gl
+            })
+            plane.loadTexture(gl, './assets/textures/cade.jpg')
 
             // Red Cube
-            const cube = new Cube({
-                program: getShaderProgram(gl, basicShaders.vertex, basicShaders.fragment)
-            })
-            gl.useProgram(cube.program);
-            cube.locations = {
-                attributes: {
-                    position: gl.getAttribLocation(cube.program, 'aPosition'),
-                },
-                uniforms: {
-                    projectionMatrix: gl.getUniformLocation(cube.program, 'uProjectionMatrix'),
-                    modelViewMatrix: gl.getUniformLocation(cube.program, 'uModelViewMatrix'),
-                }
-            }
-            cube.setBuffers(gl)
-            const cubeParams: Parameters = {
+            const cubeParams = {
                 translation: { x: -2, y: 0, z: -10 },
                 rotation: { x: 0, y: 0, z: 0 },
                 scale: { x: 1, y: 1, z: 1 }
             }
-            cube.position = cubeParams.translation
-            cube.rotation = cubeParams.rotation
-            cube.scale = cubeParams.scale
+            const cube = new Cube({
+                program: getShaderProgram(gl, basicShaders.vertex, basicShaders.fragment),
+                locationNames: {
+                    attributes: ['aPosition'],
+                    uniforms: ['uProjectionMatrix', 'uModelViewMatrix']
+                },
+                parameters: cubeParams,
+                gl
+            })
 
-            const meshes: Mesh[] = [cube, plane]
+            const meshes: Mesh[] = [plane]
+
+            const loader = new OBJLoader()
+            const content = loader.load('assets/models/cuboid.obj')
+            content.then((value) => {
+                const { positions, uvs, normals } = loader.parse(value)
+                const geometry: Geometry = {
+                    positions: new Float32Array(positions),
+                    uvs: new Float32Array(uvs),
+                    normals: new Float32Array(normals)
+                }
+                const loadedMeshParams = {
+                    translation: { x: 0, y: 1, z: -10 },
+                    rotation: { x: 0, y: 0, z: 0 },
+                    scale: { x: 1, y: 1, z: 1 }
+                }
+                const loadedMesh = new Generic({
+                    program: getShaderProgram(gl, basicShaders.vertex, basicShaders.fragment),
+                    locationNames: {
+                        attributes: ['aPosition'],
+                        uniforms: ['uProjectionMatrix', 'uModelViewMatrix']
+                    },
+                    parameters: loadedMeshParams,
+                    geometry,
+                    gl
+                })
+            })
 
             let then = 0;
             function render(now: number) {
-                requestAnimationFrame(render);
-
                 now *= 0.001;  // convert to seconds
                 const deltaTime = now - then;
                 then = now;
 
                 drawScene(canvas, gl, meshes, deltaTime, pane);
 
-                // if (pane) pane.refresh()
-
+                requestAnimationFrame(render);
             }
             requestAnimationFrame(render);
         })
@@ -123,25 +127,14 @@ function drawScene(canvas: HTMLCanvasElement, gl: WebGLRenderingContext, meshes:
 
         mesh.getAttributesFromBuffers(gl)
 
-        // Draw
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.buffers.indices);
-        {
-            const vertexCount = mesh.geometry.vertices.length / (mesh.geometry.vertices.length / mesh.geometry.indices.length);
-            const type = gl.UNSIGNED_SHORT;
-            const offset = 0;
-            gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
-        }
+        mesh.draw(gl, gl.TRIANGLES)
 
         mesh.rotation.x += deltaTime;
     }
 }
 
 
-// const loader = new OBJLoader()
-// const content = loader.load('assets/models/cuboid.obj')
-// content.then((value) => {
-//     console.log(loader.parse(value))
-// })
+
 
 // if (pane) {
 //     pane.addInput(planeParams, 'translation')

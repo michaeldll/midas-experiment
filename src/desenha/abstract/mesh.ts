@@ -12,11 +12,28 @@ export abstract class Mesh {
     rotation: { x: number, y: number, z: number }
     scale: { x: number, y: number, z: number }
 
-    constructor({ program, name }: MeshConstructor) {
+    constructor({ program, name, locationNames, parameters, gl }: MeshConstructor) {
         this.program = program
-        if (name) this.name = name
         this.buffers = {}
+        this.locations = { attributes: {}, uniforms: {} }
         this.readyToRender = true
+        for (const attributeName of locationNames.attributes) {
+            this.locations.attributes[attributeName] = gl.getAttribLocation(this.program, attributeName)
+        }
+        for (const uniformName of locationNames.uniforms) {
+            this.locations.uniforms[uniformName] = gl.getUniformLocation(this.program, uniformName)
+        }
+        if (parameters) {
+            this.position = parameters.translation
+            this.rotation = parameters.rotation
+            this.scale = parameters.scale
+        } else {
+            this.position = { x: 0, y: 0, z: 0 }
+            this.rotation = { x: 0, y: 0, z: 0 }
+            this.scale = { x: 1, y: 1, z: 1 }
+        }
+
+        if (name) this.name = name
     }
 
     // Set a 2D texture
@@ -50,8 +67,6 @@ export abstract class Mesh {
                 resolve()
             }
         })
-
-
 
     calcMatrixes = (gl: WebGLRenderingContext) => {
         // Projection
@@ -110,29 +125,27 @@ export abstract class Mesh {
             [0, 0, 1]);       // axis to rotate around (Z)
 
         // Set shader uniforms
-        gl.useProgram(this.program);
         gl.uniformMatrix4fv(
-            this.locations.uniforms.projectionMatrix,
+            this.locations.uniforms.uProjectionMatrix,
             false,
             projectionMatrix);
         gl.uniformMatrix4fv(
-            this.locations.uniforms.modelViewMatrix,
+            this.locations.uniforms.uModelViewMatrix,
             false,
             modelMatrix);
     }
 
     getAttributesFromBuffers = (gl: WebGLRenderingContext) => {
-        const { vertices, indices, colors, uvs } = this.buffers
+        const { positions, indices, colors, uvs } = this.buffers
 
-        gl.useProgram(this.program);
-        if (vertices && this.locations.attributes.position > -1) {
+        if (positions && this.locations.attributes.aPosition > -1) {
 
             // Pull out the positions from the position
             // buffer into the vertexPosition attribute
             {
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.vertices);
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.positions);
 
-                const index = this.locations.attributes.position as number
+                const index = this.locations.attributes.aPosition as number
                 const numComponents = 3;
                 const type = gl.FLOAT;
                 const normalize = false;
@@ -150,14 +163,14 @@ export abstract class Mesh {
             }
         }
 
-        if (uvs && this.locations.attributes.uv > -1) {
+        if (uvs && this.locations.attributes.aUv > -1) {
             // Pull out the texture coordinates from the uv buffer
             // into the uv attribute.
             {
 
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.uvs);
 
-                const index = this.locations.attributes.uv as number
+                const index = this.locations.attributes.aUv as number
                 const size = 2;          // 2 components per iteration
                 const type = gl.FLOAT;   // the data is 32bit floats
                 const normalize = false; // don't normalize the data
@@ -169,11 +182,11 @@ export abstract class Mesh {
             }
         }
 
-        if (colors && this.locations.attributes.color > -1) {
+        if (colors && this.locations.attributes.aColor > -1) {
             // Pull out the colors from the color buffer
             // into the vertexColor attribute.
             {
-                const index = this.locations.attributes.color as number
+                const index = this.locations.attributes.aColor as number
                 const numComponents = 4;
                 const type = gl.FLOAT;
                 const normalize = false;
@@ -198,10 +211,18 @@ export abstract class Mesh {
     }
 
     setBuffers = (gl: WebGLRenderingContext) => {
-        const { vertices, indices, colors, uvs } = this.geometry
+        const { positions, indices, colors, uvs } = this.geometry
 
-        if (vertices) {
-            this.setBuffer(gl, 'vertices')
+        if (positions) {
+            this.setBuffer(gl, 'positions')
+        }
+
+        if (colors) {
+            this.setBuffer(gl, 'colors')
+        }
+
+        if (uvs) {
+            this.setBuffer(gl, 'uvs')
         }
 
         if (indices) {
@@ -212,14 +233,6 @@ export abstract class Mesh {
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
             this.buffers.indices = indexBuffer
         }
-
-        if (colors) {
-            this.setBuffer(gl, 'colors')
-        }
-
-        if (uvs) {
-            this.setBuffer(gl, 'uvs')
-        }
     }
 
     setBuffer = (gl: WebGLRenderingContext, nameProp: string) => {
@@ -227,5 +240,13 @@ export abstract class Mesh {
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
         gl.bufferData(gl.ARRAY_BUFFER, this.geometry[nameProp], gl.STATIC_DRAW);
         this.buffers[nameProp] = buffer
+    }
+
+    // LINE_LOOP for wireframe-like aspect
+    draw = (gl: WebGLRenderingContext, mode: WebGLRenderingContextBase["TRIANGLES"] | WebGLRenderingContextBase["LINES"] | WebGLRenderingContextBase["LINE_LOOP"]) => {
+        const vertexCount = this.geometry.positions.length / (this.geometry.positions.length / this.geometry.indices.length);
+        const type = gl.UNSIGNED_SHORT;
+        const offset = 0;
+        gl.drawElements(mode, vertexCount, type, offset);
     }
 }
