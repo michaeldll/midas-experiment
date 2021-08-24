@@ -244,9 +244,33 @@ export abstract class Mesh {
 
     // LINE_LOOP for wireframe-like aspect
     draw = (gl: WebGLRenderingContext, mode: WebGLRenderingContextBase["TRIANGLES"] | WebGLRenderingContextBase["LINES"] | WebGLRenderingContextBase["LINE_LOOP"]) => {
-        const vertexCount = this.geometry.positions.length / (this.geometry.positions.length / this.geometry.indices.length);
-        const type = gl.UNSIGNED_SHORT;
-        const offset = 0;
-        gl.drawElements(mode, vertexCount, type, offset);
+        if (typeof this.geometry.indices !== "undefined" && this.geometry.indices.length) {
+            const vertexCount = this.geometry.positions.length / (this.geometry.positions.length / this.geometry.indices.length);
+            const type = gl.UNSIGNED_SHORT;
+            const offset = 0;
+            gl.drawElements(mode, vertexCount, type, offset);
+        } else {
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.positions);
+
+            // Turn on the attribute
+            gl.enableVertexAttribArray(this.locations.attributes.aPosition as number);
+
+            // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
+            var size = 3;          // 2 components per iteration
+            var type = gl.FLOAT;   // the data is 32bit floats
+            var normalize = false; // don't normalize the data
+            var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+            var offset = 0;        // start at the beginning of the buffer
+            gl.vertexAttribPointer(
+                this.locations.attributes.aPosition as number, size, type, normalize, stride, offset);
+
+            // draw
+            var primitiveType = gl.TRIANGLES;
+            var offset = 0;
+            var count = this.geometry.positions.length / 3;
+
+            gl.drawArrays(primitiveType, offset, count);
+        }
+
     }
 }

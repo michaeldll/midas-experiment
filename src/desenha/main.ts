@@ -37,6 +37,7 @@ export default function main(pane?: Pane & any) {
                 scale: { x: 1, y: 1, z: 1 }
             }
             const plane = new Plane({
+                name: 'textured plane',
                 program: getShaderProgram(gl, texelShaders.vertex, texelShaders.fragment),
                 locationNames: {
                     attributes: ['aPosition', 'aUv'],
@@ -54,6 +55,7 @@ export default function main(pane?: Pane & any) {
                 scale: { x: 1, y: 1, z: 1 }
             }
             const cube = new Cube({
+                name: 'red cube',
                 program: getShaderProgram(gl, basicShaders.vertex, basicShaders.fragment),
                 locationNames: {
                     attributes: ['aPosition'],
@@ -63,23 +65,17 @@ export default function main(pane?: Pane & any) {
                 gl
             })
 
-            const meshes: Mesh[] = [plane]
+            const meshes: Mesh[] = []
 
             const loader = new OBJLoader()
-            const content = loader.load('assets/models/cuboid.obj')
-            content.then((value) => {
-                const { positions, uvs, normals } = loader.parse(value)
-                const geometry: Geometry = {
-                    positions: new Float32Array(positions),
-                    uvs: new Float32Array(uvs),
-                    normals: new Float32Array(normals)
-                }
+            loader.load('assets/models/monitor2.obj').then((geometry) => {
                 const loadedMeshParams = {
-                    translation: { x: 0, y: 1, z: -10 },
+                    translation: { x: 0, y: 0, z: -3 },
                     rotation: { x: 0, y: 0, z: 0 },
                     scale: { x: 1, y: 1, z: 1 }
                 }
                 const loadedMesh = new Generic({
+                    name: 'michael-michel',
                     program: getShaderProgram(gl, basicShaders.vertex, basicShaders.fragment),
                     locationNames: {
                         attributes: ['aPosition'],
@@ -89,6 +85,8 @@ export default function main(pane?: Pane & any) {
                     geometry,
                     gl
                 })
+
+                meshes.push(loadedMesh)
             })
 
             let then = 0;
@@ -127,7 +125,7 @@ function drawScene(canvas: HTMLCanvasElement, gl: WebGLRenderingContext, meshes:
 
         mesh.getAttributesFromBuffers(gl)
 
-        mesh.draw(gl, gl.TRIANGLES)
+        mesh.draw(gl, gl.LINE_LOOP)
 
         mesh.rotation.x += deltaTime;
     }

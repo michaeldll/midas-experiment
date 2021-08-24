@@ -1,8 +1,18 @@
+import { Geometry } from "../types"
+
 export class OBJLoader {
     async load(url: string) {
         const response = await fetch(url)
         const textContent = await response.text()
-        return textContent
+
+        const { positions, uvs, normals } = this.parse(textContent)
+        const geometry: Geometry = {
+            positions: new Float32Array(positions),
+            uvs: new Float32Array(uvs),
+            normals: new Float32Array(normals)
+        }
+
+        return geometry
     }
 
     // https://webglfundamentals.org/webgl/lessons/webgl-load-obj.html
