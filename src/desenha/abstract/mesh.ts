@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix'
-import { Locations, Buffers, Geometry, MeshConstructor } from "../types"
+import { Locations, Buffers, Geometry, MeshConstructor, DrawCallback } from "../types"
 
 export abstract class Mesh {
     name: string
@@ -8,21 +8,28 @@ export abstract class Mesh {
     geometry: Geometry
     program: WebGLProgram
     locations: Locations
+    modelMatrix: mat4;
+    projectionMatrix: mat4;
     position: { x: number, y: number, z: number }
     rotation: { x: number, y: number, z: number }
     scale: { x: number, y: number, z: number }
+    onDrawCallbacks: DrawCallback[]
 
     constructor({ program, name, locationNames, parameters, gl }: MeshConstructor) {
-        this.program = program
         this.buffers = {}
         this.locations = { attributes: {}, uniforms: {} }
         this.readyToRender = true
+        this.onDrawCallbacks = []
+
+        this.program = program
+
         for (const attributeName of locationNames.attributes) {
             this.locations.attributes[attributeName] = gl.getAttribLocation(this.program, attributeName)
         }
         for (const uniformName of locationNames.uniforms) {
             this.locations.uniforms[uniformName] = gl.getUniformLocation(this.program, uniformName)
         }
+
         if (parameters) {
             this.position = parameters.translation
             this.rotation = parameters.rotation
@@ -36,6 +43,10 @@ export abstract class Mesh {
         if (name) this.name = name
     }
 
+    addOnDrawCallback = (callback: DrawCallback) => {
+        this.onDrawCallbacks.push(callback)
+    }
+
     // Set a 2D texture
     loadTexture = (gl: WebGLRenderingContext, path: string) =>
         new Promise((resolve: (value: void) => void) => {
@@ -44,7 +55,7 @@ export abstract class Mesh {
             image.src = path;
             image.onload = () => {
                 // Flip the image's y axis
-                // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
 
                 // Enable texture 0
                 gl.activeTexture(gl.TEXTURE0);
@@ -70,7 +81,7 @@ export abstract class Mesh {
 
     calcMatrixes = (gl: WebGLRenderingContext) => {
         // Projection
-        const projectionMatrix = mat4.create();
+        this.projectionMatrix = mat4.create();
 
         // Perspective
         {
@@ -81,7 +92,7 @@ export abstract class Mesh {
             const zFar = 100.0;
 
             mat4.perspective(
-                projectionMatrix,
+                this.projectionMatrix,
                 fieldOfView,
                 aspect,
                 zNear,
@@ -103,24 +114,24 @@ export abstract class Mesh {
         //     mat4.ortho(projectionMatrix, left, right, bottom, top, near, far)
         // }
 
-        const modelMatrix = mat4.create();
+        this.modelMatrix = mat4.create();
 
-        mat4.scale(modelMatrix,
-            modelMatrix,
+        mat4.scale(this.modelMatrix,
+            this.modelMatrix,
             [this.scale.x, this.scale.y, this.scale.z])
-        mat4.translate(modelMatrix,
-            modelMatrix,
+        mat4.translate(this.modelMatrix,
+            this.modelMatrix,
             [this.position.x, this.position.y, this.position.z]);
-        mat4.rotate(modelMatrix,
-            modelMatrix,
+        mat4.rotate(this.modelMatrix,
+            this.modelMatrix,
             this.rotation.x,     // amount to rotate in radians
             [1, 0, 0]);       // axis to rotate around (X)
-        mat4.rotate(modelMatrix,  // destination matrix
-            modelMatrix,
+        mat4.rotate(this.modelMatrix,  // destination matrix
+            this.modelMatrix,
             this.rotation.y,// amount to rotate in radians
             [0, 1, 0]);       // axis to rotate around (X)
-        mat4.rotate(modelMatrix,
-            modelMatrix,
+        mat4.rotate(this.modelMatrix,
+            this.modelMatrix,
             this.rotation.z,     // amount to rotate in radians
             [0, 0, 1]);       // axis to rotate around (Z)
 
@@ -128,15 +139,15 @@ export abstract class Mesh {
         gl.uniformMatrix4fv(
             this.locations.uniforms.uProjectionMatrix,
             false,
-            projectionMatrix);
+            this.projectionMatrix);
         gl.uniformMatrix4fv(
             this.locations.uniforms.uModelViewMatrix,
             false,
-            modelMatrix);
+            this.modelMatrix);
     }
 
     getAttributesFromBuffers = (gl: WebGLRenderingContext) => {
-        const { positions, indices, colors, uvs } = this.buffers
+        const { positions, indices, colors, uvs, normals } = this.buffers
 
         if (positions && this.locations.attributes.aPosition > -1) {
 
@@ -187,7 +198,7 @@ export abstract class Mesh {
             // into the vertexColor attribute.
             {
                 const index = this.locations.attributes.aColor as number
-                const numComponents = 4;
+                const size = 4;
                 const type = gl.FLOAT;
                 const normalize = false;
                 const stride = 0;
@@ -195,7 +206,27 @@ export abstract class Mesh {
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.colors);
                 gl.vertexAttribPointer(
                     index,
-                    numComponents,
+                    size,
+                    type,
+                    normalize,
+                    stride,
+                    offset);
+                gl.enableVertexAttribArray(index);
+            }
+        }
+
+        if (normals && this.locations.attributes.aNormal > -1) {
+            {
+                const index = this.locations.attributes.aNormal as number
+                const size = 3;
+                const type = gl.FLOAT;
+                const normalize = false;
+                const stride = 0;
+                const offset = 0;
+                gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.normals);
+                gl.vertexAttribPointer(
+                    index,
+                    size,
                     type,
                     normalize,
                     stride,
@@ -211,7 +242,7 @@ export abstract class Mesh {
     }
 
     setBuffers = (gl: WebGLRenderingContext) => {
-        const { positions, indices, colors, uvs } = this.geometry
+        const { positions, indices, colors, uvs, normals } = this.geometry
 
         if (positions) {
             this.setBuffer(gl, 'positions')
@@ -223,6 +254,10 @@ export abstract class Mesh {
 
         if (uvs) {
             this.setBuffer(gl, 'uvs')
+        }
+
+        if (normals) {
+            this.setBuffer(gl, 'normals')
         }
 
         if (indices) {
@@ -243,7 +278,7 @@ export abstract class Mesh {
     }
 
     // LINE_LOOP for wireframe-like aspect
-    draw = (gl: WebGLRenderingContext, mode: WebGLRenderingContextBase["TRIANGLES"] | WebGLRenderingContextBase["LINES"] | WebGLRenderingContextBase["LINE_LOOP"]) => {
+    draw = (gl: WebGLRenderingContext, mode: WebGLRenderingContextBase["TRIANGLES"] | WebGLRenderingContextBase["LINES"] | WebGLRenderingContextBase["LINE_LOOP"], deltaTime: number) => {
         if (typeof this.geometry.indices !== "undefined" && this.geometry.indices.length) {
             const vertexCount = this.geometry.positions.length / (this.geometry.positions.length / this.geometry.indices.length);
             const type = gl.UNSIGNED_SHORT;
@@ -272,5 +307,8 @@ export abstract class Mesh {
             gl.drawArrays(primitiveType, offset, count);
         }
 
+        for (const callback of this.onDrawCallbacks) {
+            callback(this, deltaTime)
+        }
     }
 }

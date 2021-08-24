@@ -6,6 +6,7 @@ import { Pane } from 'tweakpane';
 import { OBJLoader } from './loaders/OBJLoader';
 import Generic from './meshes/generic';
 import { Geometry } from './types';
+import { mat4 } from 'gl-matrix';
 
 export default function main(pane?: Pane & any) {
     const canvas = document.querySelector('canvas');
@@ -16,7 +17,12 @@ export default function main(pane?: Pane & any) {
         return;
     }
 
-    const texelShaders = fetchShaders(
+    const shadedShaders = fetchShaders(
+        './assets/shaders/shaded/vertex.glsl',
+        './assets/shaders/shaded/fragment.glsl',
+    )
+
+    const texturedShaders = fetchShaders(
         './assets/shaders/texel/vertex.glsl',
         './assets/shaders/texel/fragment.glsl',
     )
@@ -26,13 +32,55 @@ export default function main(pane?: Pane & any) {
         './assets/shaders/basic/fragment.glsl',
     )
 
-    Promise.all([texelShaders, basicShaders])
+    Promise.all([shadedShaders, texturedShaders, basicShaders])
         .then((shaders) => {
-            const [texelShaders, basicShaders] = shaders
+            const [shadedShaders, texelShaders, basicShaders] = shaders
+
+            const meshes: Mesh[] = []
+
+            // Monitor
+            const loader = new OBJLoader()
+            loader.load('assets/models/monitor.obj').then((geometry) => {
+                const loadedMeshParams = {
+                    translation: { x: 0, y: 0.5, z: -3 },
+                    rotation: { x: 0, y: 0, z: 0 },
+                    scale: { x: 1.1, y: 1.1, z: 1.1 }
+                }
+                const loadedMesh = new Generic({
+                    name: 'monitor',
+                    program: getShaderProgram(gl, shadedShaders.vertex, shadedShaders.fragment),
+                    locationNames: {
+                        attributes: ['aPosition', 'aNormal'],
+                        uniforms: ['uProjectionMatrix', 'uModelViewMatrix', 'uLightColor', 'uLightDirection', 'uBaseColor', 'uAmbientLight']
+                    },
+                    parameters: loadedMeshParams,
+                    geometry,
+                    gl
+                })
+
+                const setLights = (mesh: Mesh, deltaTime: number) => {
+                    // Base color
+                    gl.uniform3f(mesh.locations.uniforms.uBaseColor, 1, 0, 1);
+
+                    // Diffuse light color
+                    gl.uniform3f(mesh.locations.uniforms.uLightColor, 0.8, 0.8, 0.8);
+
+                    // Ambient light color
+                    gl.uniform3f(mesh.locations.uniforms.uAmbientLight, 0.1, 0.1, 0.1);
+
+                    // Light direction
+                    gl.uniform3f(mesh.locations.uniforms.uLightDirection, -2, -1, 1);
+
+                    mesh.rotation.y += deltaTime
+                }
+                loadedMesh.addOnDrawCallback(setLights)
+
+                meshes.push(loadedMesh)
+            })
 
             // Textured Plane
             const planeParams = {
-                translation: { x: 2, y: 0, z: -10 },
+                translation: { x: 2, y: -0.5, z: -10 },
                 rotation: { x: 0, y: 0, z: 0 },
                 scale: { x: 1, y: 1, z: 1 }
             }
@@ -47,10 +95,14 @@ export default function main(pane?: Pane & any) {
                 gl
             })
             plane.loadTexture(gl, './assets/textures/cade.jpg')
+            plane.addOnDrawCallback((mesh: Mesh, deltaTime: number) => {
+                mesh.rotation.y += deltaTime
+            })
+            meshes.push(plane)
 
             // Red Cube
             const cubeParams = {
-                translation: { x: -2, y: 0, z: -10 },
+                translation: { x: -2, y: -0.5, z: -10 },
                 rotation: { x: 0, y: 0, z: 0 },
                 scale: { x: 1, y: 1, z: 1 }
             }
@@ -64,30 +116,11 @@ export default function main(pane?: Pane & any) {
                 parameters: cubeParams,
                 gl
             })
-
-            const meshes: Mesh[] = []
-
-            const loader = new OBJLoader()
-            loader.load('assets/models/monitor2.obj').then((geometry) => {
-                const loadedMeshParams = {
-                    translation: { x: 0, y: 0, z: -3 },
-                    rotation: { x: 0, y: 0, z: 0 },
-                    scale: { x: 1, y: 1, z: 1 }
-                }
-                const loadedMesh = new Generic({
-                    name: 'michael-michel',
-                    program: getShaderProgram(gl, basicShaders.vertex, basicShaders.fragment),
-                    locationNames: {
-                        attributes: ['aPosition'],
-                        uniforms: ['uProjectionMatrix', 'uModelViewMatrix']
-                    },
-                    parameters: loadedMeshParams,
-                    geometry,
-                    gl
-                })
-
-                meshes.push(loadedMesh)
+            cube.addOnDrawCallback((mesh: Mesh, deltaTime: number) => {
+                mesh.rotation.x += deltaTime * 0.5
+                mesh.rotation.y += deltaTime
             })
+            meshes.push(cube)
 
             let then = 0;
             function render(now: number) {
@@ -125,9 +158,7 @@ function drawScene(canvas: HTMLCanvasElement, gl: WebGLRenderingContext, meshes:
 
         mesh.getAttributesFromBuffers(gl)
 
-        mesh.draw(gl, gl.LINE_LOOP)
-
-        mesh.rotation.x += deltaTime;
+        mesh.draw(gl, gl.TRIANGLES, deltaTime)
     }
 }
 

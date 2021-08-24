@@ -1,3 +1,5 @@
+import { Mesh } from "../abstract/mesh"
+
 export type Buffers = {
     [bufferName: string]: WebGLBuffer
 }
@@ -10,8 +12,6 @@ export type Locations = {
         [uniformName: string]: WebGLUniformLocation
     }
 }
-
-export type LocationOption = ['attribute' | 'uniform', string]
 
 export type Geometry = {
     positions: Float32Array
@@ -43,3 +43,5 @@ export type MeshConstructor = {
     parameters?: MeshParameters
     name?: string
 }
+
+export type DrawCallback = (mesh: Mesh, deltaTime: number) => void
