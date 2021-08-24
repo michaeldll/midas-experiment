@@ -141,7 +141,7 @@ export abstract class Mesh {
             false,
             this.projectionMatrix);
         gl.uniformMatrix4fv(
-            this.locations.uniforms.uModelViewMatrix,
+            this.locations.uniforms.uModelMatrix,
             false,
             this.modelMatrix);
     }

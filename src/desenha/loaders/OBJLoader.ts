@@ -1,6 +1,6 @@
 import { Geometry } from "../types"
 
-export class OBJLoader {
+export default class OBJLoader {
     async load(url: string) {
         const response = await fetch(url)
         const textContent = await response.text()

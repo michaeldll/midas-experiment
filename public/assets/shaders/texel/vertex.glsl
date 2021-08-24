@@ -4,12 +4,12 @@ attribute vec2 aUv;
 
 uniform sampler2D uTexture;
 
-uniform mat4 uModelViewMatrix;
+uniform mat4 uModelMatrix;
 uniform mat4 uProjectionMatrix;
 
 varying vec2 vUv;
 
 void main(void) {
     vUv = aUv;
-    gl_Position = uProjectionMatrix * uModelViewMatrix * aPosition;
+    gl_Position = uProjectionMatrix * uModelMatrix * aPosition;
 }
