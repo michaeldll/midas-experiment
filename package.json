@@ -19,7 +19,7 @@
   "homepage": "https://github.com/michaeldll/hunter-gatherer-template#readme",
   "dependencies": {
     "canvas-sketch-util": "^1.10.0",
-    "desenha": "^1.0.4",
+    "desenha": "^1.0.8",
     "esbuild": "^0.12.22",
     "gl-matrix": "^3.3.0",
     "node-static": "^0.7.11",
