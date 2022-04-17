@@ -1,0 +1,21 @@
+@font-face {
+    font-family: "Open Sans";
+    src: url("assets/fonts/opensans/OpenSans-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-display: swap;
+}
+
+canvas {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 0;
+}
+
+main {
+    font-family: "Open Sans", sans-serif;
+    position: relative;
+    z-index: 1;
+}

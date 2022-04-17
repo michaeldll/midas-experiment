@@ -1,27 +1,24 @@
 {
-  "name": "hunter-gatherer-template",
+  "name": "hunter-gatherer-boilerplate",
   "version": "1.0.0",
-  "description": "ma template",
-  "main": "./src/index.mjs",
+  "description": "my boilerplate",
+  "main": "./src/app.ts",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --minify --outfile=built/out.js",
-    "watch": "node watch.js"
+    "build": "node build.mjs",
+    "dev": "node watch.mjs"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/michaeldll/hunter-gatherer-template.git"
+    "url": "git+https://github.com/michaeldll/hunter-gatherer-boilerplate.git"
   },
   "author": "michael.dll",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/michaeldll/hunter-gatherer-template/issues"
+    "url": "https://github.com/michaeldll/hunter-gatherer-boilerplate/issues"
   },
-  "homepage": "https://github.com/michaeldll/hunter-gatherer-template#readme",
+  "homepage": "https://github.com/michaeldll/hunter-gatherer-boilerplate#readme",
   "dependencies": {
     "esbuild": "^0.12.22",
-    "node-static": "^0.7.11"
-  },
-  "devDependencies": {
-    "@types/node-static": "^0.7.7"
+    "esbuild-sass-plugin": "^2.2.6"
   }
 }
