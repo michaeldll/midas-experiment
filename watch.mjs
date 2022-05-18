@@ -7,6 +7,6 @@ esbuild.serve({
 }, {
   plugins: [sassPlugin({ type: "style" })],
   entryPoints: ["src/app.ts", "src/scss/global.scss"],
-  outdir:"public/built",
+  outdir: "public/built",
   bundle: true
 })
