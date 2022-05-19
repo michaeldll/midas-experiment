@@ -1,10 +1,10 @@
 # hunter-gatherer boilerplate
 
-As barebones as I can go. You probably don't want to use this boilerplate, but feel free to.
+As barebones as I want to go. You probably don't want to use this.
 
 Featuring: 
 
-- Only 2 dependencies : `esbuild` and its' SASS plugin
+- Only 2 dependencies
 - Fast build times
 - Typescript and SASS support
 
@@ -18,10 +18,9 @@ This will serve `public/index.html` using bundled `public/built/app.js` and `pub
 
 Assets need to be fetched from the `public` folder.
 
-This does not output the bundle to disk as it uses `esbuild.serve()` .
+This does not output the bundle to disk as it calls `esbuild.serve()`.
 
 ## How to deploy
-
 ```
 npm run build
 ```
