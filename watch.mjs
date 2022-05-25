@@ -1,8 +1,12 @@
 import esbuild from "esbuild"
 import { sassPlugin } from 'esbuild-sass-plugin'
 
+const port = 1234
+
+console.log(`serving on http://localhost:${port}`)
+
 esbuild.serve({
-  port: 1234,
+  port,
   servedir: "public",
 }, {
   plugins: [sassPlugin({ type: "style" })],
