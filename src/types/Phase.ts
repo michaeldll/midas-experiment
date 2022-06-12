@@ -1,0 +1,1 @@
+export type Phase = "DEBUG" | "INTRO" | "MIDDLE" | "OUTRO"

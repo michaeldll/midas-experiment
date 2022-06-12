@@ -1,7 +1,8 @@
 import "./scss/global.scss";
+import initGL from "./webgl/initGL";
 
 const init = () => {
-  console.log("ready");
+  initGL(document.querySelector(".canvas-gl"))
 };
 
 init()
