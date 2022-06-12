@@ -4,9 +4,9 @@ As barebones I'm willing to go. You probably don't want to use this.
 
 Featuring: 
 
-- Only 2 dependencies
+- Only 3 dependencies
 - Fast build times
-- Typescript and SASS support
+- Typescript, GLSL and SASS support
 
 ## How to develop :
 

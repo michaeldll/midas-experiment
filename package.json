@@ -19,6 +19,7 @@
   "homepage": "https://github.com/michaeldll/hunter-gatherer-boilerplate#readme",
   "dependencies": {
     "esbuild": "^0.12.22",
+    "esbuild-plugin-glsl": "^1.1.0",
     "esbuild-sass-plugin": "^2.2.6"
   }
 }
