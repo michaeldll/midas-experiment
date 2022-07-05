@@ -27,4 +27,4 @@ npm run build
 
 to minify files, then deploy the `public` folder.
 
-This essentially uses the same script as the `dev` command, but runs it just once and outputs the bundle to `public/built`.
+This essentially uses the same script as the `dev` command, but runs it just once and outputs the minified bundle to `public/built`.
