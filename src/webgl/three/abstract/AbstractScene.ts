@@ -3,7 +3,6 @@ import { MainContext } from "../WebGLController";
 import { FolderApi } from "tweakpane";
 import {
     AxesHelper,
-    FogExp2,
     GridHelper,
     PerspectiveCamera,
     Vector3,
@@ -12,7 +11,7 @@ import { OrbitControls } from "@/utils/libs/OrbitControls";
 
 export default abstract class AbstractScene extends BaseScene {
     public name: string
-    public fog = new FogExp2("#111111", 0);
+    // public fog = new FogExp2("#111111", 0);
 
     protected orbit: OrbitControls;
 
@@ -74,14 +73,7 @@ export default abstract class AbstractScene extends BaseScene {
         // TODO: smooth this out by syncinc it w/ orbit controls
         folder.addInput(this.camera, "position", { label: "Camera Position" });
 
-        folder.addInput(this.fog, "density", { label: "Fog Density", min: 0, max: 20 });
-    }
-
-    public tick(deltaTime: number, elapsedTime: number) {
-        switch (this.context.state.phase) {
-            default:
-                break;
-        }
+        // folder.addInput(this.fog, "density", { label: "Fog Density", min: 0, max: 20 });
     }
 
     public unmount() {

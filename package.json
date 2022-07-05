@@ -21,11 +21,14 @@
     "@tweakpane/core": "^1.0.9",
     "@tweakpane/plugin-essentials": "^0.1.4",
     "@types/three": "^0.141.0",
+    "detect-gpu": "^4.0.29",
     "esbuild": "^0.12.22",
     "esbuild-plugin-glsl": "^1.1.0",
     "esbuild-sass-plugin": "^2.2.6",
     "gsap": "^3.10.4",
+    "postprocessing": "^6.28.1",
     "three": "^0.141.0",
-    "tweakpane": "^3.0.8"
+    "tweakpane": "^3.0.8",
+    "virtual-scroll": "^2.2.1"
   }
 }

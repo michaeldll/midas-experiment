@@ -1,39 +1,36 @@
 import { Clock, Raycaster, TextureLoader, WebGLRenderer } from "three";
 import { Pane } from "tweakpane";
-import VRMSceneSolid from "./scenes/SceneOne";
 import { GLTFLoader } from "@/utils/libs/GLTFLoader"
 import { getProxyState, isTouchDevice } from "../../utils/misc/misc";
 import { Phase } from "../../types/Phase";
-import CustomPostProcessing from "./components/CustomPostProcessing";
 import FramerateManager from "./components/FramerateManager";
-import SceneTwo from "./scenes/SceneTwo";
 import SceneOne from "./scenes/SceneOne";
+import PostProcessing from "./components/PostProcessing";
+import { TierResult } from 'detect-gpu';
+import VirtualScroll from 'virtual-scroll'
 
 export default class WebGLController {
   public sceneOne: SceneOne;
-  public sceneTwo: SceneTwo;
 
   private clock = new Clock();
   private canvas: HTMLCanvasElement;
   private renderer: WebGLRenderer;
   private initialState: { phase: Phase } = { phase: "DEBUG" }
   private state = getProxyState(this.initialState);
-  private postprocessing: CustomPostProcessing
+  private postprocessing: PostProcessing
   private pane = new Pane()
   private framerateManager: FramerateManager;
+  private gpuTier: TierResult
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, gpuTier: TierResult) {
     this.canvas = canvas;
+    this.gpuTier = gpuTier
 
     this.setRenderer();
-    this.postprocessing = new CustomPostProcessing(
-      this.generateContext(),
-      [window.innerWidth * this.renderer.getPixelRatio(), window.innerHeight * this.renderer.getPixelRatio()]
-    )
     this.sceneOne = new SceneOne(this.generateContext());
-    this.sceneTwo = new SceneTwo(this.generateContext());
     this.setEvents();
     this.framerateManager = new FramerateManager({ targetFPS: 57 });
+    this.postprocessing = new PostProcessing({ context: this.generateContext(), sceneOne: this.sceneOne })
     this.tweaks()
   }
 
@@ -55,15 +52,18 @@ export default class WebGLController {
     isTouchDevice: isTouchDevice(),
     gltfLoader: new GLTFLoader(),
     state: this.state,
-    postprocessing: this.postprocessing
+    postprocessing: this.postprocessing,
+    scroller: new VirtualScroll({
+      useKeyboard: false,
+    }),
+    gpuTier: this.gpuTier
   });
 
   private setEvents = () => {
-    window.addEventListener("resize", this.postprocessing.onResize)
+
   };
 
   private tweaks = () => {
-    this.postprocessing.tweaks()
     this.framerateManager && this.framerateManager.tweaks(this.pane);
     const stateList: any = this.pane.addBlade({
       view: 'list',
@@ -71,10 +71,7 @@ export default class WebGLController {
       options: [
         { text: 'DEBUG', value: 'DEBUG' },
         { text: 'INTRO', value: 'INTRO' },
-        { text: 'INTRO_TRANSITION', value: 'INTRO_TRANSITION' },
-        { text: 'MIDDLE_TRANSITION', value: 'MIDDLE_TRANSITION' },
         { text: 'MIDDLE', value: 'MIDDLE' },
-        { text: 'OUTRO', value: 'OUTRO' },
       ],
       value: 'DEBUG',
     });
@@ -88,17 +85,14 @@ export default class WebGLController {
     const elapsedTime = this.clock.elapsedTime
 
     this.sceneOne.tick(deltaTime, elapsedTime);
-    this.sceneTwo.tick(deltaTime, elapsedTime);
-    this.postprocessing.renderPass(this.sceneOne.scene, this.sceneOne.camera, "fboA")
-    this.postprocessing.renderPass(this.sceneTwo.scene, this.sceneTwo.camera, "fboB")
-    this.postprocessing.renderToScreen()
+    this.postprocessing.composer.render()
 
     this.framerateManager && this.framerateManager.tick(deltaTime);
     this.pane.refresh()
   };
 
   public unmount = () => {
-    // this.vrmScene.unmount();
+
   };
 }
 

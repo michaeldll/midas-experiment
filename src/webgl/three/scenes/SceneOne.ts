@@ -12,7 +12,6 @@ export default class SceneOne extends AbstractScene {
   constructor(context: MainContext) {
     super(context, 'scene-one')
 
-    this.scene.fog = this.fog;
     this.setCameraAndOrbit();
     this.setObjects();
     this.setEvents();
@@ -33,4 +32,11 @@ export default class SceneOne extends AbstractScene {
     window.addEventListener("resize", this.onResize);
     this.context.state.onChange("phase", this.onPhaseChange)
   };
+
+  public tick(deltaTime: number, elapsedTime: number) {
+    switch (this.context.state.phase) {
+      default:
+        break;
+    }
+  }
 }
