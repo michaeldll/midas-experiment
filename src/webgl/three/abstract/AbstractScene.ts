@@ -2,6 +2,7 @@ import { MainContext } from "../WebGLController";
 import { FolderApi } from "tweakpane";
 import {
   AxesHelper,
+  Euler,
   GridHelper,
   Material,
   Mesh,
@@ -31,33 +32,33 @@ export default abstract class AbstractScene {
     controls: this.orbit,
   });
 
-  protected getCamera() {
+  protected getCamera(position = new Vector3(0, 0.0, 10), rotation = new Euler()) {
     const camera = new PerspectiveCamera(
       40,
       window.innerWidth / window.innerHeight,
       0.1,
       1000
     );
-    camera.position.set(0, 0.0, 10);
+    this.camera.position.copy(position)
+    this.camera.rotation.copy(rotation)
 
     return camera
   }
 
-  protected setCamera() {
+  protected setCamera(position = new Vector3(0, 0.0, 10), rotation = new Euler()) {
     this.camera = new PerspectiveCamera(
       40,
       window.innerWidth / window.innerHeight,
       0.1,
       1000
     );
-    this.camera.position.set(0, 0.0, 10);
+    this.camera.position.copy(position)
+    this.camera.rotation.copy(rotation)
 
     this.onResize();
-
-    this.camera.lookAt(new Vector3(0, 0, 0));
   }
 
-  protected setOrbit(enabled: boolean) {
+  protected setOrbit(enabled = true) {
     this.orbit = new OrbitControls(
       this.camera,
       this.context.renderer.domElement

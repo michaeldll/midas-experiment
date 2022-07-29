@@ -32,18 +32,16 @@ const fragmentShader = /*glsl*/`
 `;
 
 export default class BlurPostProcessing extends ShaderMaterial {
-    constructor(resolution: Vector2, blurDirection: Vector2, shaderOptions?: ShaderMaterialParameters) {
-        super({
-            vertexShader,
-            fragmentShader,
-            uniforms: {
-                uFBO: { value: null },
-                uResolution: { value: resolution },
-                uBlurDirection: { value: blurDirection }
-            },
-            ...shaderOptions
-        })
-    }
-
-
+  constructor(resolution: Vector2, blurDirection: Vector2, shaderOptions?: ShaderMaterialParameters) {
+    super({
+      vertexShader,
+      fragmentShader,
+      uniforms: {
+        uFBO: { value: null },
+        uResolution: { value: resolution },
+        uBlurDirection: { value: blurDirection }
+      },
+      ...shaderOptions
+    })
+  }
 }

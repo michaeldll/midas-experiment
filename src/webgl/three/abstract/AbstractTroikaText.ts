@@ -32,8 +32,8 @@ type TroikaOptions = {
 }
 
 export default abstract class AbstractTroikaText extends Text {
-  constructor(options: TroikaOptions) {
-    super()
+  constructor(geometry, material, options: TroikaOptions) {
+    super(geometry, material)
 
     for (const entry of Object.entries(options)) {
       this[entry[0]] = entry[1]
