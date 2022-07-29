@@ -7,6 +7,7 @@ const vertexShader = /*glsl*/`
     }
 `;
 
+// Heavily inspired by https://www.artisansdidees.com/fr created by https://immersive-g.com/
 const fragmentShader = /*glsl*/`
     precision highp float;
 
@@ -28,12 +29,7 @@ const fragmentShader = /*glsl*/`
     }
 
     float readDepth( sampler2D depthSampler, vec2 coord ) {
-      // No multisample :
       float fragCoordZ = texture2D( depthSampler, coord ).x;
-      // Blurred :
-      // float firstBlur = blur5( depthSampler, coord, uResolution * 0.5, vec2(1., 0.) ).x;
-      // float secondBlur = blur5( depthSampler, coord, uResolution * 0.5, vec2(0., 1.) ).x;
-      // float fragCoordZ = firstBlur * secondBlur;
       float viewZ = perspectiveDepthToViewZ( fragCoordZ, uCameraNear, uCameraFar );
       return viewZToOrthographicDepth( viewZ, uCameraNear, uCameraFar );
     }
@@ -46,19 +42,25 @@ const fragmentShader = /*glsl*/`
         return 1.0 - x*x*(3.0-2.0*x);
     }
 
+    // Sample both render targets and mix them according to depth
     void main() {
         vec2 st = gl_FragCoord.xy / uResolution.xy;
 
+        
         vec4 texelA = texture2D(fboA, st);
         vec4 texelB = texture2D(fboB, st);
 
         float depth = readDepth( uDepth, st );
 
+        // For a prettier transition
         float impulse = cubicPulse(uProgression, uWidth, depth);
 
+        // The min() is to prevent highlights from blowing out
         vec3 color = mix(texelA.rgb, texelB.rgb, min(impulse * 2., 1.));
 
         gl_FragColor = vec4(color, 1.);
+
+        // Debug :
         // gl_FragColor = texelA;
         // gl_FragColor = vec4(vec3(1., 0., 0.), 1.);
         // gl_FragColor = vec4(vec3(depth), 1.);
@@ -66,22 +68,21 @@ const fragmentShader = /*glsl*/`
 `;
 
 export default class MixDepthPostProcessing extends ShaderMaterial {
-    constructor(resolution: number[], shaderOptions?: ShaderMaterialParameters) {
-        super({
-            vertexShader,
-            fragmentShader,
-            uniforms: {
-                fboA: { value: null },
-                fboB: { value: null },
-                uResolution: { value: new Vector2().fromArray(resolution) },
-                uDepth: { value: null },
-                uCameraNear: { value: 0.1 },
-                uCameraFar: { value: 1 },
-                uProgression: { value: 0. },
-                uWidth: { value: 0.02 }
-
-            },
-            ...shaderOptions
-        })
-    }
+  constructor(resolution: Vector2, shaderOptions?: ShaderMaterialParameters) {
+    super({
+      vertexShader,
+      fragmentShader,
+      uniforms: {
+        fboA: { value: null },
+        fboB: { value: null },
+        uResolution: { value: resolution },
+        uDepth: { value: null },
+        uCameraNear: { value: 0.1 },
+        uCameraFar: { value: 1 },
+        uProgression: { value: 0.1 },
+        uWidth: { value: 0.02 }
+      },
+      ...shaderOptions
+    })
+  }
 }

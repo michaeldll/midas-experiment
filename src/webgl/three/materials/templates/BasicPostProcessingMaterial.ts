@@ -1,4 +1,4 @@
-import { ShaderMaterial, Uniform } from "three";
+import { ShaderMaterial, ShaderMaterialParameters, Uniform } from "three";
 
 const vertexShader = /* glsl */`
     varying vec2 vUv;
@@ -12,13 +12,13 @@ const vertexShader = /* glsl */`
 const fragmentShader = /* glsl */`
     precision highp float;
 
-    uniform sampler2D tDiffuse;
+    uniform sampler2D uFbo;
     uniform vec2 uResolution;
 
     varying vec2 vUv;
 
     void main() {
-        vec4 texel = texture2D(tDiffuse, vUv);
+        vec4 texel = texture2D(uFbo, vUv);
 
         gl_FragColor = texel;
         // gl_FragColor = vec4(vec3(1., 0., 0.), 1.);
@@ -26,11 +26,15 @@ const fragmentShader = /* glsl */`
     }
 `
 
-export default new ShaderMaterial({
-    uniforms: { tDiffuse: new Uniform(null) },
-    vertexShader,
-    fragmentShader,
-    toneMapped: false,
-    depthTest: false,
-    depthWrite: false
-});
+export default class BasicPostProcessingMaterial extends ShaderMaterial {
+  constructor(shaderOptions?: ShaderMaterialParameters) {
+    super({
+      vertexShader,
+      fragmentShader,
+      uniforms: {
+        uFbo: new Uniform(null)
+      },
+      ...shaderOptions
+    })
+  }
+}

@@ -1,11 +1,11 @@
-import { Clock, Mesh, MeshBasicMaterial, MeshStandardMaterial, Raycaster, TextureLoader, WebGLRenderer } from "three";
+import { Clock, Mesh, MeshBasicMaterial, MeshStandardMaterial, Raycaster, TextureLoader, Vector2, WebGLRenderer } from "three";
 import { Pane } from "tweakpane";
 import { GLTFLoader } from "@/utils/libs/GLTFLoader"
 import { getProxyState, isTouchDevice } from "../../utils/misc/misc";
 import { Phase } from "../../types/Phase";
 import FramerateManager from "../../utils/perf/FramerateManager";
 import SceneOne from "./scenes/SceneOne";
-import PostProcessing from "./components/PostProcessing";
+import CustomPostProcessing from "./components/CustomPostProcessing";
 import { TierResult } from 'detect-gpu';
 import VirtualScroll from 'virtual-scroll'
 
@@ -17,7 +17,7 @@ export default class WebGLController {
   private renderer: WebGLRenderer;
   private initialState: { phase: Phase } = { phase: "DEBUG" }
   private state = getProxyState(this.initialState);
-  private postprocessing: PostProcessing
+  private postprocessing: CustomPostProcessing
   private pane = new Pane()
   private framerateManager: FramerateManager;
   private gpuTier: TierResult
@@ -27,10 +27,10 @@ export default class WebGLController {
     this.gpuTier = gpuTier
 
     this.setRenderer();
+    this.postprocessing = new CustomPostProcessing(this.generateContext(), new Vector2(window.innerWidth, window.innerHeight))
     this.sceneOne = new SceneOne(this.generateContext());
     this.setEvents();
     this.framerateManager = new FramerateManager({ targetFPS: 57 });
-    this.postprocessing = new PostProcessing({ context: this.generateContext(), sceneOne: this.sceneOne })
     this.tweaks()
 
     document.body.dispatchEvent(new Event('loaded'))
@@ -88,7 +88,9 @@ export default class WebGLController {
     const elapsedTime = this.clock.elapsedTime
 
     this.sceneOne.tick(deltaTime, elapsedTime);
-    this.postprocessing.composer.render()
+
+    this.postprocessing.renderPass(this.sceneOne.scene, this.sceneOne.camera)
+    this.postprocessing.renderToScreen()
 
     this.framerateManager && this.framerateManager.tick(deltaTime);
     this.pane.refresh()
@@ -96,19 +98,11 @@ export default class WebGLController {
 
   public unmount = () => {
     // Clear geometries and materials
-    this.sceneOne.scene.traverse((obj) => {
-      if (obj.type === "Mesh") {
-        const mesh = obj as Mesh
-        mesh.geometry.dispose()
-        const material = mesh.material as MeshStandardMaterial
-        material.dispose()
-      }
-    })
+    this.sceneOne.unmount()
 
-    // Remove events
     this.sceneOne.removeEvents()
 
-    this.postprocessing.composer.dispose()
+    this.postprocessing.dispose()
 
     this.pane.dispose()
   };

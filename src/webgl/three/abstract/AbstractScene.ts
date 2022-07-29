@@ -1,22 +1,27 @@
-import BaseScene from "./BaseScene";
 import { MainContext } from "../WebGLController";
 import { FolderApi } from "tweakpane";
 import {
   AxesHelper,
   GridHelper,
+  Material,
+  Mesh,
   PerspectiveCamera,
+  Scene,
   Vector3,
 } from "three";
 import { OrbitControls } from "@/utils/libs/OrbitControls";
 
-export default abstract class AbstractScene extends BaseScene {
+export default abstract class AbstractScene {
   public name: string
-  // public fog = new FogExp2("#111111", 0);
+  public scene = new Scene()
+  public camera: PerspectiveCamera
 
   protected orbit: OrbitControls;
+  protected context: MainContext
 
   constructor(context: MainContext, name: string) {
-    super(context, name);
+    this.context = context
+    this.scene.name = name
   }
 
   protected generateContext = () => ({
@@ -84,12 +89,17 @@ export default abstract class AbstractScene extends BaseScene {
 
     folder.addInput(this.orbit, "enabled", { label: "Toggle orbit" });
     folder.addInput(this.camera, "position", { label: "Camera Position" });
-
-    // folder.addInput(this.fog, "density", { label: "Fog Density", min: 0, max: 20 });
   }
 
   public unmount() {
-    console.log("unmount MainScene");
+    this.scene.traverse((obj) => {
+      if (obj.type === "Mesh") {
+        const mesh = obj as Mesh
+        mesh.geometry.dispose()
+        const material = mesh.material as Material
+        material.dispose()
+      }
+    })
   }
 }
 
