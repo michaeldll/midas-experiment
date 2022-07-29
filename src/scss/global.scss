@@ -1,19 +1,68 @@
 @font-face {
-    font-family: "Open Sans";
-    src: url("assets/fonts/opensans/OpenSans-Regular.woff2") format("woff2");
-    font-weight: 400;
-    font-display: swap;
-}
-
-main {
-    font-family: "Open Sans", sans-serif;
+  font-family: "Open Sans";
+  src: url("assets/fonts/opensans/OpenSans-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
 }
 
 body {
-    margin: 0;
-    overflow: hidden;
+  font-family: "Open Sans", sans-serif;
+  margin: 0;
+  overflow: hidden;
+}
+
+
+main {
+  background: black;
+
+  &.image {
+    background-image: url('assets/textures/gradient-hp-mq.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
 }
 
 .tp-dfwv {
-    // display: none;
+  // display: none;
+}
+
+.loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: black;
+
+  span {
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 500;
+  }
+
+  &__mask {
+    overflow: hidden;
+    position: relative;
+    text-align: center;
+
+    &__22 {
+      visibility: hidden;
+    }
+
+    &__placeholder {
+      opacity: 0;
+    }
+
+    &__21,
+    &__22 {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      text-align: center;
+    }
+  }
 }

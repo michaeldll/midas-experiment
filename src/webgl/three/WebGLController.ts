@@ -1,9 +1,9 @@
-import { Clock, Raycaster, TextureLoader, WebGLRenderer } from "three";
+import { Clock, Mesh, MeshBasicMaterial, MeshStandardMaterial, Raycaster, TextureLoader, WebGLRenderer } from "three";
 import { Pane } from "tweakpane";
 import { GLTFLoader } from "@/utils/libs/GLTFLoader"
 import { getProxyState, isTouchDevice } from "../../utils/misc/misc";
 import { Phase } from "../../types/Phase";
-import FramerateManager from "./components/FramerateManager";
+import FramerateManager from "../../utils/perf/FramerateManager";
 import SceneOne from "./scenes/SceneOne";
 import PostProcessing from "./components/PostProcessing";
 import { TierResult } from 'detect-gpu';
@@ -32,6 +32,8 @@ export default class WebGLController {
     this.framerateManager = new FramerateManager({ targetFPS: 57 });
     this.postprocessing = new PostProcessing({ context: this.generateContext(), sceneOne: this.sceneOne })
     this.tweaks()
+
+    document.body.dispatchEvent(new Event('loaded'))
   }
 
   public setRenderer = () => {
@@ -64,7 +66,8 @@ export default class WebGLController {
   };
 
   private tweaks = () => {
-    this.framerateManager && this.framerateManager.tweaks(this.pane);
+    this.framerateManager && this.framerateManager.tweaks(this.pane, true);
+
     const stateList: any = this.pane.addBlade({
       view: 'list',
       label: 'State Phase',
@@ -92,7 +95,22 @@ export default class WebGLController {
   };
 
   public unmount = () => {
+    // Clear geometries and materials
+    this.sceneOne.scene.traverse((obj) => {
+      if (obj.type === "Mesh") {
+        const mesh = obj as Mesh
+        mesh.geometry.dispose()
+        const material = mesh.material as MeshStandardMaterial
+        material.dispose()
+      }
+    })
 
+    // Remove events
+    this.sceneOne.removeEvents()
+
+    this.postprocessing.composer.dispose()
+
+    this.pane.dispose()
   };
 }
 

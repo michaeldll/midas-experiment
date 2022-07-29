@@ -1,9 +1,9 @@
-import { AbstractSceneContext } from "./AbstractScene"
+import { MainContext } from "../WebGLController"
 
-export default abstract class ContextComponent {
-  protected context: AbstractSceneContext
+export default abstract class ContextComponent<T extends MainContext> {
+  protected context: T
 
-  constructor(context: AbstractSceneContext) {
+  constructor(context: T) {
     this.context = context
   }
 }

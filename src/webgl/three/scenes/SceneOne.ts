@@ -12,11 +12,12 @@ export default class SceneOne extends AbstractScene {
   constructor(context: MainContext) {
     super(context, 'scene-one')
 
-    this.setCameraAndOrbit();
+    this.setCamera()
+    this.setOrbit(true)
     this.setObjects();
     this.setEvents();
     this.tweaks()
-    // this.debug();
+    this.debug();
   }
 
   private setObjects() {
@@ -32,6 +33,10 @@ export default class SceneOne extends AbstractScene {
     window.addEventListener("resize", this.onResize);
     this.context.state.onChange("phase", this.onPhaseChange)
   };
+
+  public removeEvents = () => {
+    window.removeEventListener("resize", this.onResize)
+  }
 
   public tick(deltaTime: number, elapsedTime: number) {
     switch (this.context.state.phase) {

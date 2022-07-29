@@ -1,7 +1,7 @@
 import gsap from 'gsap'
 import { Color, DoubleSide, Mesh, MeshNormalMaterial, PlaneBufferGeometry } from 'three'
 import { AbstractSceneContext } from '../abstract/AbstractScene'
-import TextMaterial from '../materials/BasicTroikaTextMaterial'
+import TextMaterial from '../materials/templates/BasicTroikaTextMaterial'
 import AbstractTroikaText from '../abstract/AbstractTroikaText'
 import { preloadFont } from 'troika-three-text'
 import { ExtendedShaderMaterialOptions } from '@/types/ExtendedShaderMaterialOptions'

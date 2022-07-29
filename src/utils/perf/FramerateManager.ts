@@ -1,6 +1,11 @@
 import { getAverage } from "../math/math";
 
-class FramerateManager {
+
+export default class FramerateManager {
+  private fps = 0
+
+  // Number of frames to count before averaging things out
+  private count = 50;
   private arrayFPS = [];
   private averageFPS = 0;
 
@@ -9,37 +14,45 @@ class FramerateManager {
 
   public isUnderTarget = false;
 
-  constructor({ targetFPS, underTargetCallback }) {
+  constructor({ targetFPS, underTargetCallback = () => { } }) {
     this.targetFPS = targetFPS;
     this.underTargetCallback = underTargetCallback;
   }
 
-  public tweaks = (pane) => {
+  public tweaks = (pane, expanded: boolean) => {
     const folder = pane.addFolder({
-      title: "Performance",
-      expanded: false,
+      title: "FPS",
+      expanded: expanded,
     });
 
+    folder.addMonitor(this, "averageFPS")
     folder.addMonitor(this, "averageFPS", {
       view: "graph",
-      interval: 1000,
+      interval: 100,
       min: 0,
-      max: 1000,
+      max: 168,
     });
+
+    // folder.addMonitor(this, "fps")
+    // folder.addMonitor(this, "fps", {
+    //   view: "graph",
+    //   interval: 100,
+    //   min: 0,
+    //   max: 144,
+    // });
   };
 
-  public manageFPS(deltaTime: number) {
-    if (this.isUnderTarget) return;
+  public tick(deltaTime: number) {
+    this.fps = 1 / deltaTime;
 
-    const fps = 1000 / deltaTime;
-
-    if (this.arrayFPS.length < 300) {
-      this.arrayFPS.push(fps);
+    if (this.arrayFPS.length < this.count) {
+      this.arrayFPS.push(this.fps);
     } else {
       this.averageFPS = getAverage(this.arrayFPS);
       this.arrayFPS = [];
     }
 
+    // Fire callback only once if FPS is under target
     if (
       this.averageFPS !== 0 &&
       this.averageFPS < this.targetFPS &&
@@ -50,5 +63,3 @@ class FramerateManager {
     }
   }
 }
-
-export default FramerateManager;
