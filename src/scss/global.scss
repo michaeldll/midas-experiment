@@ -20,6 +20,12 @@ main {
     background-size: cover;
     background-repeat: no-repeat;
   }
+  
+  // Only when OGL
+  .canvas-gl{
+    width: 100%!important;
+    height: 100vh!important;
+  }
 }
 
 .tp-dfwv {

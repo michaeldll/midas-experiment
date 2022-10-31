@@ -58,3 +58,7 @@ export function normalize(val: number, max: number, min: number) {
 export function distance(x1: any, y1: any, x2: any, y2: any) {
     return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
 }
+
+export const polarToCartesian = (radius: number, theta: number) => {
+  return [radius * Math.cos(theta), radius * Math.sin(theta)] as [number, number]
+}

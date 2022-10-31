@@ -88,3 +88,10 @@ export function getProxyState<T>(fromState: T) {
   
   return proxied;
 }
+
+export function isBetween(max: number, min?: number) {
+  if (typeof min === "undefined") return window.matchMedia(`(max-width: ${max}px)`).matches
+  else {
+    return window.matchMedia(`(min-width: ${min}px) and (max-width: ${max}px)`).matches
+  }
+}

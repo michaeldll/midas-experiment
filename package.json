@@ -26,6 +26,7 @@
     "esbuild-plugin-glsl": "^1.1.0",
     "esbuild-sass-plugin": "^2.2.6",
     "gsap": "^3.10.4",
+    "ogl-typescript": "^0.1.40",
     "postprocessing": "^6.28.1",
     "three": "^0.141.0",
     "tweakpane": "^3.0.8",
