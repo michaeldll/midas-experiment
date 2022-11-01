@@ -1,14 +1,13 @@
 import RadialProject from './RadialProject'
-import { SliderSceneContext } from '../scenes/SliderScene'
+import { Config, SliderSceneContext } from '../scenes/SliderScene'
 import ContextComponent from '../abstract/ContextComponent'
 import { clamp, lerp } from '../../../utils/math/math'
 import { Mesh, Transform, Vec3 } from 'ogl-typescript'
 import { SliderImagesData } from '@/types/Images'
-import getPerspectiveSize from '@/utils/ogl/misc'
 
 type Props = {
   context: SliderSceneContext
-  radius: number
+  config: Config
   imagesData: SliderImagesData[]
 }
 
@@ -22,20 +21,21 @@ export default class RadialSlider extends ContextComponent<SliderSceneContext> {
   public centerOffset = 0
   private spinFactor = 0
 
-  private radius: number
+  private config: Config
 
   constructor({
     context,
-    radius,
+    config,
     imagesData
   }: Props) {
     super(context)
 
-    this.radius = radius
+    this.config = config
 
     this.setProjects(imagesData)
-    // this.centerOffset = this.getCenterOffset() - (1 / imagesData.length * Math.PI * 2)
-    this.centerOffset = -14.1375
+
+    this.centerOffset = this.getCenterOffset() - (1 / imagesData.length * Math.PI * 2)
+    // this.centerOffset = -4.5 * Math.PI //above calc breaks on large number of images
 
     this.setEvents()
     this.tweaks()
@@ -43,15 +43,17 @@ export default class RadialSlider extends ContextComponent<SliderSceneContext> {
 
   private setProjects(imagesData: SliderImagesData[]) {
     for (let index = 0; index < imagesData.length; index++) {
-      const { id, name, texture } = imagesData[index]
+      const { id, name, texture, depthTexture, normalTexture } = imagesData[index]
 
       const project = new RadialProject({
         context: this.context,
         index,
-        radius: this.radius,
+        config: this.config,
         id,
         name,
-        texture
+        texture,
+        depthTexture,
+        normalTexture
       })
 
       if (index === this.context.state.activeIndex) project.state.active = true
@@ -64,7 +66,7 @@ export default class RadialSlider extends ContextComponent<SliderSceneContext> {
   private getCenterOffset() {
     const marker = new Transform()
     // marker.visible = false
-    marker.position.z = this.radius
+    marker.position.z = this.config.radius
     marker.setParent(this.group)
 
     const distances = []
@@ -75,7 +77,7 @@ export default class RadialSlider extends ContextComponent<SliderSceneContext> {
     })
 
     const smallest = Math.min(...distances)
-    const angle = Math.acos(1 - (smallest * smallest) / (2 * this.radius * this.radius))
+    const angle = Math.acos(1 - (smallest * smallest) / (2 * this.config.radius * this.config.radius))
 
     const index = distances.findIndex((value) => { return value === smallest })
     const clampedIndex = Math.max((index - 1), 0)

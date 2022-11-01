@@ -1,6 +1,6 @@
 
-import { SliderSceneContext } from "../scenes/SliderScene"
-import RadialMaterial from "../materials/RadialMaterial"
+import { Config, SliderSceneContext } from "../scenes/SliderScene"
+import MidasMaterial from "../materials/MidasMaterial"
 import { Mesh, Plane, Program, Texture, Vec3 } from "ogl-typescript"
 import { getProxyState } from "@/utils/misc/misc"
 import { clamp, lerp, polarToCartesian } from "@/utils/math/math"
@@ -8,9 +8,11 @@ import { clamp, lerp, polarToCartesian } from "@/utils/math/math"
 type Props = {
   context: SliderSceneContext
   index: number
-  radius: number
+  config: Config
   id: number
   texture: Texture
+  depthTexture: Texture
+  normalTexture: Texture
   name: string
   origin?: Vec3
 }
@@ -26,12 +28,15 @@ export default class RadialProject extends Mesh {
     opacity: 1,
     deformation: 1
   }
+  private config: Config
 
   constructor({
     context,
     index,
     texture,
-    radius,
+    depthTexture,
+    normalTexture,
+    config,
     origin = new Vec3()
   }: Props) {
     super(
@@ -43,11 +48,13 @@ export default class RadialProject extends Mesh {
           widthSegments: 10,
           heightSegments: 10
         }),
-        program: new RadialMaterial(context.renderer.gl, texture)
+        program: new MidasMaterial(context.renderer.gl, texture, depthTexture, normalTexture, config)
       }
     )
 
-    const [x, y] = polarToCartesian(radius, -index / context.imagesData.length * Math.PI * 2)
+    this.config = config
+
+    const [x, y] = polarToCartesian(config.radius, -index / context.imagesData.length * Math.PI * 2)
     this.polarTarget = new Vec3(x, 0, y)
 
     this.position.copy(origin)

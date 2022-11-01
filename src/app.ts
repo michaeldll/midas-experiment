@@ -2,7 +2,7 @@ import { getGPUTier, TierResult } from "detect-gpu";
 import LoadingController from "./DOM/LoadingController";
 import "./scss/global.scss";
 import { SliderImagesToLoad } from "./types/Images";
-import initGL from "./webgl/sliderInitGL";
+import initGL from "./webgl/initGL";
 
 const init = () => {
   new LoadingController(true);
@@ -15,14 +15,24 @@ const init = () => {
     //   tier: 2,
     //   type: "BENCHMARK"
     // };
-    const images: SliderImagesToLoad = new Array(20).fill({}).map((value, i)=>{
-      return {
-        url: `/assets/images/pecha/Slide-${i+1}.png`,
-        alt: 'depth'
-      }
+    const images: SliderImagesToLoad = new Array(4).fill({}).map((value, i) => {
+      if (i % 2 === 0)
+        return {
+          url: `/assets/images/midas/doge.jpeg`,
+          depthUrl: `/assets/images/midas/doge-depth.jpeg`,
+          normalUrl: `/assets/images/midas/doge-normal.jpeg`,
+          alt: 'doge'
+        }
+      else
+        return {
+          url: `/assets/images/midas/me.jpeg`,
+          depthUrl: `/assets/images/midas/me-depth.jpeg`,
+          normalUrl: `/assets/images/midas/me-normal.jpeg`,
+          alt: 'me'
+        }
     })
     console.log(images);
-    
+
     const [controller, tick, cancel] = initGL(document.querySelector(".canvas-gl"), gpuTier, images)
     console.log('gpu tier:', gpuTier)
 

@@ -1,24 +1,27 @@
-import { clamp, lerp } from "../../../utils/math/math";
 import { FolderApi } from "tweakpane";
 import AbstractScene from "../abstract/AbstractScene";
-import { MouseController } from "../components/MouseController";
 import RadialSlider from "../components/RadialSlider";
 import { MainContext } from "../WebGLController";
-import { Vec2 } from "ogl-typescript";
 import { SliderImagesData } from "@/types/Images";
 import { isBetween } from "@/utils/misc/misc";
 import { getViewport } from "@/utils/ogl/misc";
+import { Vec3 } from "ogl-typescript";
 
 export default class SliderScene extends AbstractScene {
   public slider: RadialSlider
   public indexDebug = 0
 
-  private radius = 1.75
+  private config = {
+    radius: 1.75,
+    lightPosition: new Vec3(1.),
+    lightIntensity: { value: 0.1 },
+    baseColorIntensity: { value: 0.5 }
+  }
 
   constructor(context: MainContext, imagesData: SliderImagesData[]) {
     super(context, "Slider Scene")
 
-    this.radius = imagesData.length / 2.28
+    this.config.radius = imagesData.length / 2.28
     this.setCamera()
     this.onResize();
     this.setObjects(imagesData);
@@ -28,7 +31,7 @@ export default class SliderScene extends AbstractScene {
   }
 
   private setObjects(imagesData: SliderImagesData[]) {
-    this.slider = new RadialSlider({ context: this.generateContext(), radius: this.radius, imagesData })
+    this.slider = new RadialSlider({ context: this.generateContext(), config: this.config, imagesData })
     this.slider.group.setParent(this.scene)
   }
 
@@ -77,12 +80,12 @@ export default class SliderScene extends AbstractScene {
 
     this.context.renderer.dpr = Math.min(2, window.devicePixelRatio);
 
+    // Resize
     const breakTabletP = 768;
     const breakTabletL = 1024;
-    // this.camera.position.z = this.radius * 3.1415
-    this.camera.position.z = 12
-    if (isBetween(breakTabletL, breakTabletP)) this.camera.position.z = this.radius * 5.14
-    else if (isBetween(breakTabletP - 1)) this.camera.position.z = this.radius * 7.14
+    this.camera.position.z = 5
+    if (isBetween(breakTabletL, breakTabletP)) this.camera.position.z = 5
+    else if (isBetween(breakTabletP - 1)) this.camera.position.z = 5
 
     this.context.viewport = getViewport(this.camera)
   };
@@ -101,8 +104,8 @@ export default class SliderScene extends AbstractScene {
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space') {
         let index = 19
-        setInterval(()=>{
-          if(index == 0) index = 19
+        setInterval(() => {
+          if (index == 0) index = 19
           else index -= 1
 
           document.querySelector('#number').innerHTML = index.toString()
@@ -133,11 +136,14 @@ export default class SliderScene extends AbstractScene {
     });
 
     folder.addInput(this.camera, "position", { label: "Camera Position" });
-    // folder.addInput(this.camera, "rotation", { label: "Camera Rotation" });
+    folder.addInput(this.camera, "rotation", { label: "Camera Rotation" });
     // const indexDebug = folder.addInput(this, "indexDebug", { min: 0, max: this.context.imagesData.length, step: 1 })
     // indexDebug.on("change", (e) => {
     //   this.context.state.activeIndex = e.value
     // })
+    folder.addInput(this.config, 'lightPosition')
+    folder.addInput(this.config.lightIntensity, 'value')
+    folder.addInput(this.config.baseColorIntensity, 'value')
   }
 
   public tick(deltaTime: number, elapsedTime: number) {
@@ -146,3 +152,4 @@ export default class SliderScene extends AbstractScene {
 }
 
 export type SliderSceneContext = ReturnType<SliderScene["generateContext"]>;
+export type Config = { radius: number, lightPosition: Vec3, lightIntensity: { value: number }, baseColorIntensity: { value: number } }

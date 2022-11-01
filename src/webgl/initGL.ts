@@ -1,22 +1,24 @@
+
+import { SliderImagesToLoad } from "@/types/Images"
 import { TierResult } from "detect-gpu"
-import WebGLController from "./three/WebGLController"
+import WebGLController from "./ogl-slider/WebGLController"
 
 export default function initGL(
   canvas: HTMLCanvasElement,
-  gpuTier: TierResult
+  gpuTier: TierResult,
+  images: SliderImagesToLoad
 ) {
-  const controller = new WebGLController(canvas, gpuTier)
+  const controller = new WebGLController(canvas, gpuTier, images)
 
   let raf: number
   const tick = () => {
     controller.tick()
     raf = requestAnimationFrame(tick)
   }
-  tick()
 
   const cancel = () => {
     cancelAnimationFrame(raf)
   }
 
-  return [controller, cancel] as [WebGLController, () => void] // Use these to dispose
+  return [controller, tick, cancel] as [WebGLController, () => void, () => void]
 }

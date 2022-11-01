@@ -8,6 +8,7 @@ import { getProxyState, isTouchDevice } from "@/utils/misc/misc";
 import { Clock } from "@/utils/threejs/Clock";
 import { State } from "@/types/State";
 import { SliderImagesData, SliderImagesToLoad } from "@/types/Images";
+import { loadTexture } from "@/utils/ogl/misc";
 
 export default class WebGLController {
   public sliderScene: SliderScene
@@ -35,17 +36,22 @@ export default class WebGLController {
     let promises: Promise<SliderImagesData>[] = [];
 
     for (let index = 0; index < images.length; index++) {
-      const { url, alt } = images[index];
+      const { url, alt, depthUrl, normalUrl } = images[index];
 
       promises.push(new Promise<SliderImagesData>((resolve, reject) => {
-        const texture = new Texture(this.renderer.gl);
-        const img = new Image();
-        img.crossOrigin = "Anonymous"
-        img.onload = () => {
-          texture.image = img
-          resolve({ id: index, name: alt, texture })
-        };
-        img.src = url;
+        const colorMapPromise = loadTexture(this.renderer.gl, url)
+        const depthMapPromise = loadTexture(this.renderer.gl, depthUrl)
+        const normalMapPromise = loadTexture(this.renderer.gl, normalUrl)
+
+        Promise.all([colorMapPromise, depthMapPromise, normalMapPromise]).then(([texture, depthTexture, normalTexture]) => {
+          resolve({
+            id: index,
+            name: alt,
+            texture,
+            depthTexture,
+            normalTexture
+          })
+        })
       }))
     }
 
