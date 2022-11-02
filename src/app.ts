@@ -16,20 +16,20 @@ const init = () => {
     //   type: "BENCHMARK"
     // };
     const images: SliderImagesToLoad = new Array(4).fill({}).map((value, i) => {
-      if (i % 2 === 0)
+      // if (i % 2 === 0)
         return {
           url: `/assets/images/midas/doge.jpeg`,
           depthUrl: `/assets/images/midas/doge-depth.jpeg`,
-          normalUrl: `/assets/images/midas/doge-normal.jpeg`,
+          normalUrl: `/assets/images/midas/doge-normal-v2.png`,
           alt: 'doge'
         }
-      else
-        return {
-          url: `/assets/images/midas/me.jpeg`,
-          depthUrl: `/assets/images/midas/me-depth.jpeg`,
-          normalUrl: `/assets/images/midas/me-normal.jpeg`,
-          alt: 'me'
-        }
+      // else
+      //   return {
+      //     url: `/assets/images/midas/me.jpeg`,
+      //     depthUrl: `/assets/images/midas/me-depth.jpeg`,
+      //     normalUrl: `/assets/images/midas/me-normal.jpeg`,
+      //     alt: 'me'
+      //   }
     })
     console.log(images);
 

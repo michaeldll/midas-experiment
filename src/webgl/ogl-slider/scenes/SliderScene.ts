@@ -14,8 +14,8 @@ export default class SliderScene extends AbstractScene {
   private config = {
     radius: 1.75,
     lightPosition: new Vec3(1.),
-    lightIntensity: { value: 0.1 },
-    baseColorIntensity: { value: 0.5 }
+    lightIntensity: { value: 0.3 },
+    baseColorIntensity: { value: 0 }
   }
 
   constructor(context: MainContext, imagesData: SliderImagesData[]) {
