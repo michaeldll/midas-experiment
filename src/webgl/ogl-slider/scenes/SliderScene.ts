@@ -5,17 +5,25 @@ import { MainContext } from "../WebGLController";
 import { SliderImagesData } from "@/types/Images";
 import { isBetween } from "@/utils/misc/misc";
 import { getViewport } from "@/utils/ogl/misc";
-import { Vec3 } from "ogl-typescript";
+import { Vec2, Vec3 } from "ogl-typescript";
+import { MouseController } from "../components/MouseController";
+import { Vector2 } from "three";
+import { lerp } from "@/utils/math/math";
 
 export default class SliderScene extends AbstractScene {
   public slider: RadialSlider
   public indexDebug = 0
+  private mouseController : MouseController
+  private mousePosition = {
+    normal: new Vec3(),
+    lerped: new Vec3(),
+  }
 
   private config = {
     radius: 1.75,
     lightPosition: new Vec3(1.),
-    lightIntensity: { value: 0.3 },
-    baseColorIntensity: { value: 0 }
+    lightIntensity: { value: 0.2 },
+    baseColorIntensity: { value: -0.2 }
   }
 
   constructor(context: MainContext, imagesData: SliderImagesData[]) {
@@ -33,6 +41,8 @@ export default class SliderScene extends AbstractScene {
   private setObjects(imagesData: SliderImagesData[]) {
     this.slider = new RadialSlider({ context: this.generateContext(), config: this.config, imagesData })
     this.slider.group.setParent(this.scene)
+
+    this.mouseController = new MouseController(this.generateContext())
   }
 
   private onSlideChange = (e: CustomEvent) => {
@@ -141,13 +151,22 @@ export default class SliderScene extends AbstractScene {
     // indexDebug.on("change", (e) => {
     //   this.context.state.activeIndex = e.value
     // })
-    folder.addInput(this.config, 'lightPosition')
-    folder.addInput(this.config.lightIntensity, 'value')
-    folder.addInput(this.config.baseColorIntensity, 'value')
+    folder.addInput(this.config, 'lightPosition', {label: "Light Position", })
+    folder.addInput(this.config.lightIntensity, 'value', {label: "Light Intensity"})
+    folder.addInput(this.config.baseColorIntensity, 'value', {label: "Image Brightness"})
   }
 
   public tick(deltaTime: number, elapsedTime: number) {
     this.slider.tick(deltaTime, elapsedTime)
+
+    this.mousePosition.normal.set(this.mouseController.normalizedMousePosition.x * this.context.viewport.width, -this.mouseController.normalizedMousePosition.y * this.context.viewport.height, 0)
+    this.mousePosition.lerped.x = lerp(this.mousePosition.lerped.x, this.mousePosition.normal.x, 0.1)
+    this.mousePosition.lerped.y = lerp(this.mousePosition.lerped.y, this.mousePosition.normal.y, 0.1)
+    this.mousePosition.lerped.z = lerp(this.mousePosition.lerped.z, this.mousePosition.normal.z, 0.1)
+    this.config.lightPosition.copy(this.mousePosition.lerped)
+    
+    
+    this.context.pane.refresh()
   }
 }
 

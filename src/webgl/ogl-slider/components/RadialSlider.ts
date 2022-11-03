@@ -127,7 +127,7 @@ export default class RadialSlider extends ContextComponent<SliderSceneContext> {
   }
 
   public tweaks() {
-    const folder = this.context.pane.addFolder({ title: 'Slider' })
+    const folder = this.context.pane.addFolder({ title: 'Slider', expanded: false })
     folder.addInput(this, "speedFactor", { min: 0, max: 4, label: "Speed" })
 
     folder.addInput(this, "targetAngle")
